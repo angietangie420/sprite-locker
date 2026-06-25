@@ -8,15 +8,14 @@
   :root{
     --bg:#0e1020; --panel:#191c33; --panel2:#222748; --line:#2e3358;
     --txt:#eef0ff; --muted:#9aa0c8; --accent:#6c5ce7; --accent2:#00d1b2;
-    --have:#00d1b2; --need:#3a3f63;
+    --have:#00d1b2;
     --rare:#3aa0ff; --epic:#b15cff; --legendary:#ffb13a; --mythic:#ff5c8a;
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:'Segoe UI',system-ui,Arial,sans-serif;background:
     radial-gradient(1200px 600px at 80% -10%,#241a4d 0,transparent 60%),var(--bg);
     color:var(--txt);min-height:100vh}
-  a{color:var(--accent2)}
-  header{padding:18px 22px;border-bottom:1px solid var(--line);
+  header{padding:16px 22px;border-bottom:1px solid var(--line);
     display:flex;align-items:center;gap:16px;flex-wrap:wrap}
   .logo{font-size:22px;font-weight:800;letter-spacing:.5px}
   .logo span{color:var(--accent2)}
@@ -32,14 +31,13 @@
   input{background:#0c0e1c;border:1px solid var(--line);border-radius:9px;
     padding:10px 12px;color:var(--txt);font-size:14px;width:100%}
   input:focus{outline:2px solid var(--accent)}
-  .wrap{max-width:1100px;margin:0 auto;padding:22px}
+  .wrap{max-width:1150px;margin:0 auto;padding:22px}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px}
   .muted{color:var(--muted)}
   .err{color:#ff7b7b;font-size:13px;min-height:18px;margin-top:6px}
   .ok{color:var(--accent2);font-size:13px}
 
-  /* Auth */
-  .authwrap{max-width:420px;margin:8vh auto}
+  .authwrap{max-width:420px;margin:7vh auto}
   .authwrap h1{margin:0 0 4px;font-size:24px}
   .field{margin:12px 0}
   .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
@@ -47,44 +45,53 @@
   .tabsmini button{flex:1;background:var(--panel2);border:1px solid var(--line)}
   .tabsmini button.active{background:var(--accent)}
 
-  /* Tabs */
   .tabs{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
   .tabs button{background:var(--panel2);border:1px solid var(--line)}
   .tabs button.active{background:var(--accent);border-color:var(--accent)}
 
-  /* Progress */
   .progress{height:12px;background:#0c0e1c;border-radius:20px;overflow:hidden;border:1px solid var(--line)}
-  .progress > div{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0}
+  .progress > div{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0;transition:width .3s}
   .statline{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px}
+  .pill{font-size:12px;padding:3px 10px;border-radius:20px;background:#0c0e1c;color:var(--muted)}
 
-  /* Sprite grid */
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:16px}
-  .sprite{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px;border-left:4px solid var(--line)}
-  .sprite.Rare{border-left-color:var(--rare)}
-  .sprite.Epic{border-left-color:var(--epic)}
-  .sprite.Legendary{border-left-color:var(--legendary)}
-  .sprite.Mythic{border-left-color:var(--mythic)}
-  .sprite h3{margin:0 0 2px;font-size:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:#0c0e1c;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-top:16px}
+  .sprite{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px;border-top:4px solid var(--line)}
+  .sprite.rare{border-top-color:var(--rare)}
+  .sprite.epic{border-top-color:var(--epic)}
+  .sprite.legendary{border-top-color:var(--legendary)}
+  .sprite.mythic{border-top-color:var(--mythic)}
+  .sprite.done{box-shadow:0 0 0 2px var(--have) inset}
+  .head{display:flex;align-items:center;gap:10px}
+  .head img{width:46px;height:46px;object-fit:contain;filter:drop-shadow(0 2px 4px #0008)}
+  .head h3{margin:0;font-size:15px;line-height:1.2}
+  .meta{display:flex;gap:6px;align-items:center;margin-top:3px;flex-wrap:wrap}
+  .badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:#0c0e1c;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .badge.rare{color:var(--rare)} .badge.epic{color:var(--epic)}
+  .badge.legendary{color:var(--legendary)} .badge.mythic{color:var(--mythic)}
   .badge.new{background:var(--accent2);color:#05231f}
-  .power{font-size:12px;color:var(--muted);margin:6px 0 10px;min-height:30px}
-  .chips{display:flex;flex-wrap:wrap;gap:7px}
-  .chip{font-size:12px;font-weight:600;padding:6px 10px;border-radius:20px;border:1px solid var(--line);
-    background:var(--need);color:var(--txt);cursor:pointer;user-select:none;display:flex;align-items:center;gap:5px}
-  .chip.have{background:var(--have);color:#05231f;border-color:transparent}
-  .chip.readonly{cursor:default}
-  .proofrow{margin-top:11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .proofrow input[type=file]{font-size:11px;color:var(--muted);width:auto}
-  .thumb{width:42px;height:42px;border-radius:8px;object-fit:cover;border:1px solid var(--line)}
+  .complete{position:absolute;top:10px;right:10px;background:var(--have);color:#05231f;
+    font-size:10px;font-weight:800;padding:3px 8px;border-radius:20px}
+  .power{font-size:11px;color:var(--muted);margin:9px 0 6px;min-height:28px}
+  .variants{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:7px}
+  .vchip{position:relative;background:#0c0e1c;border:1px solid var(--line);border-radius:10px;
+    padding:6px 4px 4px;text-align:center;cursor:pointer;user-select:none;transition:.12s}
+  .vchip:hover{border-color:var(--accent)}
+  .vchip.have{background:rgba(0,209,178,.14);border-color:var(--have)}
+  .vchip.readonly{cursor:default}
+  .vchip.readonly:hover{border-color:var(--line)}
+  .vchip img{width:38px;height:38px;object-fit:contain;display:block;margin:0 auto}
+  .vchip .vlabel{font-size:9px;color:var(--muted);margin-top:2px}
+  .vchip.have .vlabel{color:var(--have);font-weight:700}
+  .vchip .mark{position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;
+    background:#2a2f52;border:1px solid var(--line);font-size:10px;line-height:15px;color:transparent}
+  .vchip.have .mark{background:var(--have);border-color:var(--have);color:#05231f;font-weight:900}
+  .notowned .vchip img{opacity:.45}
+  .vchip.have img{opacity:1}
 
-  /* Traders */
   .trader{display:flex;align-items:center;gap:14px;background:var(--panel2);border:1px solid var(--line);
     border-radius:12px;padding:13px 16px;margin-bottom:10px;flex-wrap:wrap}
   .trader .pbar{flex:1;min-width:160px}
-  .matchnote{font-size:12px;color:var(--accent2);margin-top:6px}
-  .pill{font-size:11px;padding:3px 9px;border-radius:20px;background:#0c0e1c;color:var(--muted)}
   .hide{display:none}
-  .center{text-align:center}
   footer{padding:24px;text-align:center;color:var(--muted);font-size:12px}
 </style>
 </head>
@@ -100,11 +107,11 @@
   </div>
 </header>
 
-<!-- ===================== AUTH ===================== -->
+<!-- AUTH -->
 <div class="wrap authwrap" id="authView">
   <div class="card">
     <h1>Track. Compare. Trade.</h1>
-    <p class="muted">Log what Sprites you've extracted, see what you still need, and browse other collectors to set up trades.</p>
+    <p class="muted">Tick off the Sprite variants you've collected, see what you still need, and browse other collectors to set up trades.</p>
     <div class="tabsmini">
       <button id="tabLogin" class="active">Log in</button>
       <button id="tabSignup">Sign up</button>
@@ -127,30 +134,29 @@
   </div>
 </div>
 
-<!-- ===================== APP ===================== -->
+<!-- APP -->
 <div class="wrap hide" id="appView">
   <div class="tabs">
     <button id="navMine" class="active">My Collection</button>
     <button id="navTraders">Browse Traders</button>
   </div>
 
-  <!-- My collection -->
   <div id="mineView">
     <div class="card">
       <div class="statline">
-        <div><b id="mineTitle">My Collection</b> <span class="muted" id="mineCount"></span></div>
+        <div><b>My Collection</b> <span class="muted" id="mineCount"></span></div>
         <span class="pill" id="missingPill"></span>
       </div>
       <div class="progress"><div id="mineBar"></div></div>
+      <p class="muted" style="font-size:12px;margin:10px 0 0">Tap any variant to mark it collected. A green ✓ means you have it.</p>
     </div>
     <div class="grid" id="mineGrid"></div>
   </div>
 
-  <!-- Traders -->
   <div id="tradersView" class="hide">
     <div class="card">
       <b>Other collectors</b>
-      <p class="muted" style="margin:6px 0 0;font-size:13px">Click anyone to compare collections. Trade matches (they have what you need, you have what they need) are highlighted.</p>
+      <p class="muted" style="margin:6px 0 0;font-size:13px">Click anyone to compare. Trade matches (they have what you need, you have what they need) are highlighted.</p>
     </div>
     <div id="tradersList" style="margin-top:14px"></div>
     <div id="compareView" class="hide" style="margin-top:14px"></div>
@@ -158,42 +164,37 @@
 </div>
 
 <footer>
-  SpriteLocker · Fan-made tracker · Not affiliated with Epic Games · Sprite list is community-maintained in <code>sprites.js</code>
+  SpriteLocker · Fan-made tracker · Not affiliated with Epic Games · Images via fortnite.gg · Sprite list maintained in <code>sprites.js</code>
 </footer>
 
-<!-- Supabase + data -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="sprites.js"></script>
 <script>
 /* ============================ APP LOGIC ============================ */
-// SEASON, VARIANTS, SPRITES are already declared globally by sprites.js
+// SEASON, IMG_BASE, VARIANT_ORDER, SPRITES are declared globally by sprites.js
 const cfg = window.SUPA_CONFIG;
+const $ = id => document.getElementById(id);
+const imgUrl = f => IMG_BASE + f;
+const key = (s,v) => `${s}|${v}`;
 
-// ---- Season banner ----
-document.getElementById('seasonBanner').innerHTML =
+// total collectible slots = all variants across all sprites
+const TOTAL = SPRITES.reduce((n,sp)=>n + sp.variants.length, 0);
+
+$('seasonBanner').innerHTML =
   `<b>${SEASON.chapter} · ${SEASON.season}: ${SEASON.name}</b> — ${SEASON.note} ` +
   `<span class="muted">(ends ${SEASON.endDate})</span>`;
 
-const TOTAL = SPRITES.length * VARIANTS.length;
-
-// ---- Supabase client (guarded if keys not set) ----
+// Supabase client
 let supa = null;
 const configured = cfg.SUPABASE_URL && !cfg.SUPABASE_URL.includes('PASTE');
-if (configured) {
-  supa = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
-} else {
-  document.getElementById('configWarn').textContent =
-    '⚠ Supabase keys not set yet — edit config.js with your free project URL + anon key (see README).';
-}
+if (configured) supa = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+else $('configWarn').textContent = '⚠ Supabase keys not set yet — edit config.js (see README).';
 
-// ---- State ----
-let me = null;            // {id, username}
-let myOwned = {};         // "spriteId|variant" -> {owned, media_url}
-const key = (s,v) => `${s}|${v}`;
+let me = null;          // {id, username}
+let myOwned = {};        // "spriteId|variant" -> true
 
-// ====================== AUTH UI ======================
-const $ = id => document.getElementById(id);
+// ---------- AUTH UI ----------
 let mode = 'login';
 $('tabLogin').onclick = () => setMode('login');
 $('tabSignup').onclick = () => setMode('signup');
@@ -205,47 +206,36 @@ function setMode(m){
   $('authBtn').textContent = m==='login' ? 'Log in' : 'Create account';
   $('authErr').textContent = '';
 }
-
 $('authBtn').onclick = async () => {
   if (!supa){ $('authErr').textContent = 'Set up Supabase first (see README).'; return; }
-  const email = $('email').value.trim();
-  const password = $('password').value;
-  const username = $('username').value.trim();
+  const email = $('email').value.trim(), password = $('password').value, username = $('username').value.trim();
   $('authErr').textContent = '';
   if (!email || !password){ $('authErr').textContent = 'Email and password required.'; return; }
-
   if (mode === 'signup'){
     if (!username){ $('authErr').textContent = 'Pick a display name.'; return; }
     const { data, error } = await supa.auth.signUp({ email, password });
     if (error){ $('authErr').textContent = error.message; return; }
     const uid = data.user?.id;
     if (uid){
-      const { error: pErr } = await supa.from('profiles').insert({ id: uid, username });
-      if (pErr && !pErr.message.includes('duplicate')) { $('authErr').textContent = pErr.message; return; }
+      const { error:pErr } = await supa.from('profiles').insert({ id:uid, username });
+      if (pErr && !pErr.message.includes('duplicate')){ $('authErr').textContent = pErr.message; return; }
     }
-    // If email confirmation is on, session may be null
-    if (!data.session){
-      $('authErr').innerHTML = '<span class="ok">Account created! Check your email to confirm, then log in.</span>';
-      setMode('login');
-      return;
-    }
+    if (!data.session){ $('authErr').innerHTML = '<span class="ok">Account created! You can log in now.</span>'; setMode('login'); return; }
   } else {
     const { error } = await supa.auth.signInWithPassword({ email, password });
     if (error){ $('authErr').textContent = error.message; return; }
   }
   await boot();
 };
-
 $('logoutBtn').onclick = async () => { await supa.auth.signOut(); location.reload(); };
 
-// ====================== BOOT (after login) ======================
+// ---------- BOOT ----------
 async function boot(){
   const { data:{ user } } = await supa.auth.getUser();
   if (!user) return;
-  // profile
-  let { data: prof } = await supa.from('profiles').select('username').eq('id', user.id).maybeSingle();
+  let { data:prof } = await supa.from('profiles').select('username').eq('id', user.id).maybeSingle();
   if (!prof){
-    const fallback = (user.email || 'player').split('@')[0];
+    const fallback = (user.email||'player').split('@')[0];
     await supa.from('profiles').insert({ id:user.id, username:fallback });
     prof = { username: fallback };
   }
@@ -257,15 +247,14 @@ async function boot(){
   await loadMine();
   renderMine();
 }
-
 async function loadMine(){
   myOwned = {};
-  const { data } = await supa.from('collection').select('*').eq('user_id', me.id);
-  (data||[]).forEach(r => { myOwned[key(r.sprite_id, r.variant)] = { owned:r.owned, media_url:r.media_url }; });
+  const { data } = await supa.from('collection').select('sprite_id,variant,owned').eq('user_id', me.id);
+  (data||[]).forEach(r => { if (r.owned) myOwned[key(r.sprite_id, r.variant)] = true; });
 }
 
-// ====================== RENDER: MY COLLECTION ======================
-function ownedCount(map){ return Object.values(map).filter(x=>x.owned).length; }
+// ---------- RENDER MY COLLECTION ----------
+function ownedCount(map){ return Object.keys(map).filter(k=>map[k]).length; }
 
 function renderMine(){
   const have = ownedCount(myOwned);
@@ -273,77 +262,58 @@ function renderMine(){
   $('mineBar').style.width = (have/TOTAL*100) + '%';
   const missing = TOTAL - have;
   $('missingPill').textContent = missing ? `${missing} still needed` : '🎉 Complete set!';
-
-  const grid = $('mineGrid');
-  grid.innerHTML = '';
+  const grid = $('mineGrid'); grid.innerHTML = '';
   SPRITES.forEach(sp => grid.appendChild(spriteCard(sp, true)));
 }
 
 function spriteCard(sp, editable, otherMap){
   const map = editable ? myOwned : (otherMap||{});
+  const ownedHere = sp.variants.filter(x=>map[key(sp.id,x.v)]).length;
+  const complete = ownedHere === sp.variants.length;
   const el = document.createElement('div');
-  el.className = 'sprite ' + sp.rarity;
+  el.className = 'sprite ' + sp.rarity + (complete ? ' done' : '');
+
   const isNew = sp.added ? '<span class="badge new">New</span>' : '';
   let chips = '';
-  VARIANTS.forEach(v => {
-    const owned = map[key(sp.id,v)]?.owned;
-    chips += `<span class="chip ${owned?'have':''} ${editable?'':'readonly'}" data-s="${sp.id}" data-v="${v}">${owned?'✓ ':''}${v}</span>`;
+  sp.variants.forEach(x => {
+    const have = !!map[key(sp.id, x.v)];
+    chips += `<div class="vchip ${have?'have':'notowned'} ${editable?'':'readonly'}" data-s="${sp.id}" data-v="${x.v}" title="${x.v}">
+      <img src="${imgUrl(x.f)}" alt="${x.v} ${sp.name}" loading="lazy" />
+      <div class="vlabel">${x.v}</div>
+      <div class="mark">✓</div>
+    </div>`;
   });
+
   el.innerHTML = `
-    <h3>${sp.name} <span class="badge">${sp.rarity}</span> ${isNew}</h3>
+    ${complete ? '<div class="complete">✓ Complete</div>' : ''}
+    <div class="head">
+      <img src="${imgUrl(sp.variants[0].f)}" alt="${sp.name}" />
+      <div>
+        <h3>${sp.name}</h3>
+        <div class="meta"><span class="badge ${sp.rarity}">${sp.rarity}</span>${isNew}
+          <span class="badge">${ownedHere}/${sp.variants.length}</span></div>
+      </div>
+    </div>
     <div class="power">${sp.power||''}</div>
-    <div class="chips">${chips}</div>
-    ${editable ? `<div class="proofrow">
-        <input type="file" accept="image/*,video/*" data-up="${sp.id}" />
-        <span class="muted" style="font-size:11px">attach proof photo/clip</span>
-      </div>` : ''}
-  `;
-  if (editable){
-    el.querySelectorAll('.chip').forEach(c => c.onclick = () => toggleOwned(c.dataset.s, c.dataset.v));
-    el.querySelector('[data-up]').onchange = e => uploadProof(sp.id, e.target.files[0]);
-  } else {
-    // show any proof thumbnails on hover via title
-    VARIANTS.forEach(v => {
-      const m = map[key(sp.id,v)];
-      if (m?.media_url){
-        const chip = el.querySelector(`.chip[data-v="${v}"]`);
-        if (chip){ chip.style.cursor='pointer'; chip.title='View proof'; chip.onclick=()=>window.open(m.media_url,'_blank'); }
-      }
-    });
-  }
+    <div class="variants">${chips}</div>`;
+
+  if (editable) el.querySelectorAll('.vchip').forEach(c =>
+    c.onclick = () => toggleOwned(c.dataset.s, c.dataset.v));
   return el;
 }
 
 async function toggleOwned(spriteId, variant){
   const k = key(spriteId, variant);
-  const current = myOwned[k]?.owned || false;
-  const next = !current;
-  myOwned[k] = { ...(myOwned[k]||{}), owned: next };
+  const next = !myOwned[k];
+  if (next) myOwned[k] = true; else delete myOwned[k];
   renderMine();
   const { error } = await supa.from('collection')
-    .upsert({ user_id: me.id, sprite_id: spriteId, variant, owned: next, updated_at: new Date().toISOString() },
-            { onConflict: 'user_id,sprite_id,variant' });
-  if (error){ alert('Save failed: ' + error.message); }
+    .upsert({ user_id:me.id, sprite_id:spriteId, variant, owned:next, updated_at:new Date().toISOString() },
+            { onConflict:'user_id,sprite_id,variant' });
+  if (error) alert('Save failed: ' + error.message);
 }
 
-async function uploadProof(spriteId, file){
-  if (!file) return;
-  const ext = (file.name.split('.').pop()||'dat').toLowerCase();
-  const path = `${me.id}/${spriteId}-${Date.now()}.${ext}`;
-  const { error: upErr } = await supa.storage.from('sprite-proof').upload(path, file, { upsert:true });
-  if (upErr){ alert('Upload failed: ' + upErr.message); return; }
-  const { data:{ publicUrl } } = supa.storage.from('sprite-proof').getPublicUrl(path);
-  // attach to the first variant of this sprite the user owns, else "Normal", and mark owned
-  const variant = VARIANTS.find(v => myOwned[key(spriteId,v)]?.owned) || VARIANTS[0];
-  myOwned[key(spriteId,variant)] = { owned:true, media_url:publicUrl };
-  await supa.from('collection').upsert(
-    { user_id:me.id, sprite_id:spriteId, variant, owned:true, media_url:publicUrl, updated_at:new Date().toISOString() },
-    { onConflict:'user_id,sprite_id,variant' });
-  renderMine();
-  alert('Proof uploaded and attached to ' + spriteId + ' (' + variant + ').');
-}
-
-// ====================== TABS ======================
+// ---------- TABS ----------
 $('navMine').onclick = () => switchTab('mine');
 $('navTraders').onclick = () => switchTab('traders');
 function switchTab(t){
@@ -354,23 +324,19 @@ function switchTab(t){
   if (t==='traders') loadTraders();
 }
 
-// ====================== BROWSE TRADERS ======================
+// ---------- BROWSE TRADERS ----------
 async function loadTraders(){
   const list = $('tradersList');
-  $('compareView').classList.add('hide');
-  list.classList.remove('hide');
+  $('compareView').classList.add('hide'); list.classList.remove('hide');
   list.innerHTML = '<p class="muted">Loading collectors…</p>';
-  const { data: profiles } = await supa.from('profiles').select('id,username');
-  const { data: coll } = await supa.from('collection').select('user_id,sprite_id,variant,owned,media_url');
+  const { data:profiles } = await supa.from('profiles').select('id,username');
+  const { data:coll } = await supa.from('collection').select('user_id,sprite_id,variant,owned');
   const byUser = {};
-  (coll||[]).forEach(r => { (byUser[r.user_id] ??= {})[key(r.sprite_id,r.variant)] = { owned:r.owned, media_url:r.media_url }; });
-
+  (coll||[]).forEach(r => { if (r.owned){ (byUser[r.user_id] ??= {})[key(r.sprite_id,r.variant)] = true; } });
   list.innerHTML = '';
   (profiles||[]).filter(p=>p.id!==me.id).forEach(p => {
-    const map = byUser[p.id] || {};
-    const have = ownedCount(map);
-    const row = document.createElement('div');
-    row.className = 'trader';
+    const map = byUser[p.id] || {}; const have = ownedCount(map);
+    const row = document.createElement('div'); row.className = 'trader';
     row.innerHTML = `
       <div style="min-width:120px"><b>${p.username}</b><div class="muted" style="font-size:12px">${have}/${TOTAL}</div></div>
       <div class="pbar"><div class="progress"><div style="width:${have/TOTAL*100}%"></div></div></div>
@@ -383,23 +349,17 @@ async function loadTraders(){
 
 function compareWith(person, theirMap){
   $('tradersList').classList.add('hide');
-  const view = $('compareView');
-  view.classList.remove('hide');
-
-  // Trade matches
+  const view = $('compareView'); view.classList.remove('hide');
   const theyHaveINeed = [], iHaveTheyNeed = [];
-  SPRITES.forEach(sp => VARIANTS.forEach(v => {
-    const mine = myOwned[key(sp.id,v)]?.owned;
-    const theirs = theirMap[key(sp.id,v)]?.owned;
-    if (theirs && !mine) theyHaveINeed.push(`${sp.name} (${v})`);
-    if (mine && !theirs) iHaveTheyNeed.push(`${sp.name} (${v})`);
+  SPRITES.forEach(sp => sp.variants.forEach(x => {
+    const mine = !!myOwned[key(sp.id,x.v)], theirs = !!theirMap[key(sp.id,x.v)];
+    if (theirs && !mine) theyHaveINeed.push(`${sp.name} (${x.v})`);
+    if (mine && !theirs) iHaveTheyNeed.push(`${sp.name} (${x.v})`);
   }));
-
-  let html = `<div class="card">
+  view.innerHTML = `<div class="card">
     <button class="ghost sm" id="backBtn">← Back to list</button>
     <h2 style="margin:12px 0 2px">${person.username}'s collection</h2>
-    <div class="statline"><span class="muted">Trade opportunities with you</span></div>
-    <div class="grid" style="grid-template-columns:1fr 1fr;margin-top:0">
+    <div class="grid" style="grid-template-columns:1fr 1fr;margin-top:8px">
       <div class="card" style="background:var(--panel2)">
         <b style="color:var(--accent2)">They have, you need (${theyHaveINeed.length})</b>
         <div class="muted" style="font-size:13px;margin-top:6px">${theyHaveINeed.join(', ') || 'Nothing — you have everything they do.'}</div>
@@ -408,18 +368,14 @@ function compareWith(person, theirMap){
         <b style="color:var(--legendary)">You have, they need (${iHaveTheyNeed.length})</b>
         <div class="muted" style="font-size:13px;margin-top:6px">${iHaveTheyNeed.join(', ') || 'Nothing — they have everything you do.'}</div>
       </div>
-    </div>
-  </div>`;
-  view.innerHTML = html;
+    </div></div>`;
   $('backBtn').onclick = loadTraders;
-
-  const grid = document.createElement('div');
-  grid.className = 'grid';
+  const grid = document.createElement('div'); grid.className = 'grid';
   SPRITES.forEach(sp => grid.appendChild(spriteCard(sp, false, theirMap)));
   view.appendChild(grid);
 }
 
-// ====================== SESSION RESTORE ======================
+// ---------- SESSION RESTORE ----------
 (async function init(){
   if (!supa) return;
   const { data:{ session } } = await supa.auth.getSession();
