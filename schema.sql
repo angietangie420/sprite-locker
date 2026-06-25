@@ -81,3 +81,21 @@ create policy "proof update own" on storage.objects
     bucket_id = 'sprite-proof'
     and auth.uid()::text = (storage.foldername(name))[1]
   );
+
+-- 5) FRIENDS: lets a user add other collectors as friends -------------
+create table if not exists public.friends (
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  friend_id  uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz default now(),
+  primary key (user_id, friend_id)
+);
+alter table public.friends enable row level security;
+drop policy if exists "friends readable" on public.friends;
+create policy "friends readable" on public.friends
+  for select using ( auth.role() = 'authenticated' );
+drop policy if exists "own friends insert" on public.friends;
+create policy "own friends insert" on public.friends
+  for insert with check ( auth.uid() = user_id );
+drop policy if exists "own friends delete" on public.friends;
+create policy "own friends delete" on public.friends
+  for delete using ( auth.uid() = user_id );

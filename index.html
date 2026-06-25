@@ -241,6 +241,7 @@ else $('configWarn').textContent = '⚠ Supabase keys not set yet — edit confi
 
 let me = null;
 let myOwned = {};
+let myFriends = new Set();
 let fRarity = 'all', fStatus = 'all', fSearch = '';
 
 // ---------- AUTH ----------
@@ -445,22 +446,45 @@ async function loadTraders(){
   const list = $('tradersList');
   $('compareView').classList.add('hide'); list.classList.remove('hide');
   list.innerHTML = '<p class="muted">Loading collectors…</p>';
-  const { data:profiles } = await supa.from('profiles').select('id,username');
-  const { data:coll } = await supa.from('collection').select('user_id,sprite_id,variant,owned');
+  const [{ data:profiles }, { data:coll }, { data:fr }] = await Promise.all([
+    supa.from('profiles').select('id,username'),
+    supa.from('collection').select('user_id,sprite_id,variant,owned'),
+    supa.from('friends').select('friend_id').eq('user_id', me.id)
+  ]);
+  myFriends = new Set((fr||[]).map(r=>r.friend_id));
   const byUser = {};
   (coll||[]).forEach(r => { if (r.owned){ (byUser[r.user_id] ??= {})[key(r.sprite_id,r.variant)] = true; } });
+  const others = (profiles||[]).filter(p=>p.id!==me.id)
+    .sort((a,b)=> (myFriends.has(b.id)?1:0)-(myFriends.has(a.id)?1:0) || a.username.localeCompare(b.username));
   list.innerHTML = '';
-  (profiles||[]).filter(p=>p.id!==me.id).forEach(p => {
+  others.forEach(p => {
     const map = byUser[p.id] || {}; const have = ownedCount(map);
+    const isFriend = myFriends.has(p.id);
     const row = document.createElement('div'); row.className = 'trader';
     row.innerHTML = `
-      <div style="min-width:120px"><b>${p.username}</b><div class="muted" style="font-size:12px">${have}/${TOTAL}</div></div>
+      <div style="min-width:130px"><b>${isFriend?'⭐ ':''}${p.username}</b><div class="muted" style="font-size:12px">${have}/${TOTAL}</div></div>
       <div class="pbar"><div class="progress"><div style="width:${have/TOTAL*100}%"></div></div></div>
-      <button class="sm">Compare</button>`;
-    row.querySelector('button').onclick = () => compareWith(p, map);
+      <button class="sm friendbtn ${isFriend?'ghost':''}">${isFriend?'⭐ Friend':'+ Add friend'}</button>
+      <button class="sm cmp">Compare</button>`;
+    row.querySelector('.friendbtn').onclick = e => toggleFriend(p, e.currentTarget);
+    row.querySelector('.cmp').onclick = () => compareWith(p, map);
     list.appendChild(row);
   });
-  if (!list.children.length) list.innerHTML = '<div class="empty">No other collectors yet — invite a friend to sign up!</div>';
+  if (!others.length) list.innerHTML = '<div class="empty">No other collectors yet — invite a friend to sign up!</div>';
+}
+
+async function toggleFriend(p, btn){
+  if (myFriends.has(p.id)){
+    myFriends.delete(p.id);
+    btn.textContent = '+ Add friend'; btn.classList.remove('ghost');
+    const { error } = await supa.from('friends').delete().eq('user_id', me.id).eq('friend_id', p.id);
+    if (error) alert('Failed: ' + error.message);
+  } else {
+    myFriends.add(p.id);
+    btn.textContent = '⭐ Friend'; btn.classList.add('ghost');
+    const { error } = await supa.from('friends').insert({ user_id: me.id, friend_id: p.id });
+    if (error) alert('Failed: ' + error.message);
+  }
 }
 function compareWith(person, theirMap){
   $('tradersList').classList.add('hide');
