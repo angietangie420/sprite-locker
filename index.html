@@ -209,8 +209,12 @@
       <p class="muted" style="margin:6px 0 0;font-size:13px">Click anyone to compare. Trade matches (they have what you need, you have what they need) are highlighted.</p>
       <div class="ok hide" id="inviteMsg" style="margin-top:10px"></div>
     </div>
-    <input class="search" id="friendSearch" placeholder="🔎 Find a collector by name…" style="max-width:none;margin-top:14px" />
+    <div class="controls" style="margin-top:14px">
+      <input class="search" id="friendSearch" placeholder="🔎 Find a collector by name…" />
+      <span class="fchip" id="friendsOnlyBtn" data-on="0">⭐ Friends only</span>
+    </div>
     <div id="tradersList" style="margin-top:12px"></div>
+    <div class="empty hide" id="noFriendsNote">You haven't added any friends yet — tap "+ Add friend" on a collector to follow them.</div>
     <div id="compareView" class="hide" style="margin-top:14px"></div>
   </div>
 </div>
@@ -463,6 +467,7 @@ async function loadTraders(){
     const isFriend = myFriends.has(p.id);
     const row = document.createElement('div'); row.className = 'trader';
     row.dataset.name = p.username.toLowerCase();
+    row.dataset.friend = isFriend ? '1' : '0';
     row.innerHTML = `
       <div style="min-width:130px"><b>${isFriend?'⭐ ':''}${p.username}</b><div class="muted" style="font-size:12px">${have}/${TOTAL}</div></div>
       <div class="pbar"><div class="progress"><div style="width:${have/TOTAL*100}%"></div></div></div>
@@ -476,17 +481,24 @@ async function loadTraders(){
 }
 
 async function toggleFriend(p, btn){
+  const row = btn.closest('.trader');
+  const nameEl = row && row.querySelector('b');
   if (myFriends.has(p.id)){
     myFriends.delete(p.id);
     btn.textContent = '+ Add friend'; btn.classList.remove('ghost');
+    if (row) row.dataset.friend = '0';
+    if (nameEl) nameEl.textContent = p.username;
     const { error } = await supa.from('friends').delete().eq('user_id', me.id).eq('friend_id', p.id);
     if (error) alert('Failed: ' + error.message);
   } else {
     myFriends.add(p.id);
     btn.textContent = '⭐ Friend'; btn.classList.add('ghost');
+    if (row) row.dataset.friend = '1';
+    if (nameEl) nameEl.textContent = '⭐ ' + p.username;
     const { error } = await supa.from('friends').insert({ user_id: me.id, friend_id: p.id });
     if (error) alert('Failed: ' + error.message);
   }
+  applyTraderFilter();
 }
 function compareWith(person, theirMap){
   $('tradersList').classList.add('hide');
@@ -528,12 +540,26 @@ $('inviteBtn').onclick = async () => {
   msg.classList.remove('hide');
 };
 
-// friend search
-$('friendSearch').oninput = e => {
-  const q = e.target.value.trim().toLowerCase();
+// friend search + "friends only" filter
+function applyTraderFilter(){
+  const q = ($('friendSearch').value||'').trim().toLowerCase();
+  const fo = $('friendsOnlyBtn').dataset.on === '1';
+  let shown = 0;
   document.querySelectorAll('#tradersList .trader').forEach(row => {
-    row.style.display = (!q || (row.dataset.name||'').includes(q)) ? '' : 'none';
+    const okName = !q || (row.dataset.name||'').includes(q);
+    const okFriend = !fo || row.dataset.friend === '1';
+    const vis = okName && okFriend;
+    row.style.display = vis ? '' : 'none';
+    if (vis) shown++;
   });
+  const note = $('noFriendsNote');
+  if (note) note.classList.toggle('hide', !(fo && shown===0));
+}
+$('friendSearch').oninput = applyTraderFilter;
+$('friendsOnlyBtn').onclick = () => {
+  const b = $('friendsOnlyBtn'); const on = b.dataset.on === '1';
+  b.dataset.on = on ? '0' : '1'; b.classList.toggle('on', !on);
+  applyTraderFilter();
 };
 
 // ---------- INIT ----------
