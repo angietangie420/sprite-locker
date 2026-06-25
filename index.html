@@ -18,15 +18,26 @@
       radial-gradient(900px 500px at 12% -8%, #3a1d6e55 0, transparent 55%),
       radial-gradient(900px 500px at 95% -5%, #0b6b6055 0, transparent 55%),
       var(--bg);}
-  header{position:sticky;top:0;z-index:50;padding:14px 22px;
-    background:rgba(12,14,28,.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);
+  header{position:sticky;top:0;z-index:50;padding:12px 22px;
+    background:linear-gradient(100deg, rgba(36,22,72,.92), rgba(12,14,28,.9) 45%, rgba(7,40,38,.92));
+    backdrop-filter:blur(12px);border-bottom:1px solid #ffffff12;box-shadow:0 6px 28px #0007;
     display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-  .logo{font-size:22px;font-weight:900;letter-spacing:.5px}
+  header::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;
+    background:linear-gradient(90deg,transparent,var(--accent),var(--accent2),transparent);
+    background-size:200% 100%;animation:shimmer 4s linear infinite;opacity:.85}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo-badge{width:42px;height:42px;border-radius:13px;flex:none;display:flex;align-items:center;justify-content:center;font-size:23px;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 6px 18px #7c5cff66;animation:float 4s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-3px) rotate(-4deg)}}
+  .logo{font-size:23px;font-weight:900;letter-spacing:.5px;line-height:1}
   .logo span{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
-  .season{font-size:13px;color:var(--muted)}
-  .season b{color:var(--txt)}
+  .tagline{font-size:11px;color:var(--muted);letter-spacing:.3px;margin-top:3px}
+  .season-pill{font-size:12.5px;color:var(--txt);background:rgba(124,92,255,.16);border:1px solid #ffffff1f;
+    padding:8px 15px;border-radius:30px;box-shadow:0 2px 10px #0004}
+  .season-pill b{color:var(--accent2)}
   .spacer{flex:1}
   .userbox{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:10px}
+  .chip-user{background:#ffffff10;border:1px solid #ffffff1f;padding:6px 12px;border-radius:30px;color:var(--txt);font-weight:600;font-size:13px}
   button{cursor:pointer;border:none;border-radius:10px;padding:9px 14px;font-weight:600;font-size:14px;
     background:linear-gradient(90deg,var(--accent),#9b7bff);color:#fff;transition:.15s;box-shadow:0 4px 14px #7c5cff33}
   button:hover{filter:brightness(1.1);transform:translateY(-1px)}
@@ -153,11 +164,17 @@
 <body>
 
 <header>
-  <div class="logo">Sprite<span>Locker</span></div>
-  <div class="season" id="seasonBanner"></div>
+  <div class="brand">
+    <div class="logo-badge">👾</div>
+    <div>
+      <div class="logo">Sprite<span>Locker</span></div>
+      <div class="tagline">Fortnite Sprite tracker &amp; trade hub</div>
+    </div>
+  </div>
+  <div class="season-pill" id="seasonBanner"></div>
   <div class="spacer"></div>
   <div class="userbox hide" id="userBox">
-    <span id="whoami"></span>
+    <span class="chip-user" id="whoami"></span>
     <button class="ghost sm" id="logoutBtn">Log out</button>
   </div>
 </header>
@@ -262,7 +279,7 @@ const RARITY_ORDER = { rare:0, epic:1, legendary:2, mythic:3 };
 const TOTAL = SPRITES.reduce((n,sp)=>n + sp.variants.length, 0);
 
 $('seasonBanner').innerHTML =
-  `<b>${SEASON.chapter} · ${SEASON.season}: ${SEASON.name}</b> — ${SEASON.note} <span class="muted">(ends ${SEASON.endDate})</span>`;
+  `🗓️ <b>${SEASON.chapter} · ${SEASON.season}: ${SEASON.name}</b> · ends ${SEASON.endDate}`;
 
 let supa = null;
 const configured = cfg.SUPABASE_URL && !cfg.SUPABASE_URL.includes('PASTE');
