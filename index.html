@@ -202,8 +202,12 @@
 
   <div id="tradersView" class="hide">
     <div class="card">
-      <b>Other collectors</b>
+      <div class="statline">
+        <b>Other collectors</b>
+        <button class="sm" id="inviteBtn">🔗 Invite a friend to trade</button>
+      </div>
       <p class="muted" style="margin:6px 0 0;font-size:13px">Click anyone to compare. Trade matches (they have what you need, you have what they need) are highlighted.</p>
+      <div class="ok hide" id="inviteMsg" style="margin-top:10px"></div>
     </div>
     <div id="tradersList" style="margin-top:14px"></div>
     <div id="compareView" class="hide" style="margin-top:14px"></div>
@@ -483,6 +487,20 @@ function compareWith(person, theirMap){
   SPRITES.forEach(sp => grid.appendChild(spriteCard(sp, false, theirMap)));
   view.appendChild(grid);
 }
+
+// ---------- INVITE ----------
+$('inviteBtn').onclick = async () => {
+  const url = location.origin + location.pathname;
+  const invite = `Join me on SpriteLocker to track & trade our Fortnite Sprites! Sign up, check off the ones you have, and we can see exactly what to trade each other: ${url}`;
+  const msg = $('inviteMsg');
+  try {
+    await navigator.clipboard.writeText(invite);
+    msg.textContent = '✓ Invite copied! Paste it to a friend (Discord, text, anywhere). Once they sign up they’ll show up here to trade with.';
+  } catch (e) {
+    msg.textContent = 'Copy this invite link and send it to a friend: ' + url;
+  }
+  msg.classList.remove('hide');
+};
 
 // ---------- INIT ----------
 wireFilters();
