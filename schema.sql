@@ -35,9 +35,16 @@ drop policy if exists "profiles readable" on public.profiles;
 create policy "profiles readable" on public.profiles
   for select using ( auth.role() = 'authenticated' );
 
+-- A collection is visible only to its owner and to MUTUAL friends
+-- (both people have added each other).
 drop policy if exists "collections readable" on public.collection;
-create policy "collections readable" on public.collection
-  for select using ( auth.role() = 'authenticated' );
+create policy "collections readable" on public.collection for select using (
+  auth.uid() = user_id
+  or (
+    exists (select 1 from public.friends f1 where f1.user_id = auth.uid() and f1.friend_id = collection.user_id)
+    and exists (select 1 from public.friends f2 where f2.user_id = collection.user_id and f2.friend_id = auth.uid())
+  )
+);
 
 -- You can only INSERT/UPDATE/DELETE your OWN profile
 drop policy if exists "own profile insert" on public.profiles;
@@ -90,12 +97,40 @@ create table if not exists public.friends (
   primary key (user_id, friend_id)
 );
 alter table public.friends enable row level security;
+-- You can only read friendship rows that involve you
 drop policy if exists "friends readable" on public.friends;
 create policy "friends readable" on public.friends
-  for select using ( auth.role() = 'authenticated' );
+  for select using ( auth.uid() = user_id or auth.uid() = friend_id );
 drop policy if exists "own friends insert" on public.friends;
 create policy "own friends insert" on public.friends
   for insert with check ( auth.uid() = user_id );
 drop policy if exists "own friends delete" on public.friends;
 create policy "own friends delete" on public.friends
   for delete using ( auth.uid() = user_id );
+
+-- 6) FRIEND SUGGESTIONS: mutual friends of your mutual friends -------
+create or replace function public.friend_suggestions()
+returns table(id uuid, username text, mutuals bigint)
+language sql security definer set search_path = public as $$
+  with my_mut as (
+    select f.friend_id fid
+    from friends f
+    where f.user_id = auth.uid()
+      and exists (select 1 from friends b where b.user_id = f.friend_id and b.friend_id = f.user_id)
+  )
+  select p.id, p.username, count(*)::bigint as mutuals
+  from my_mut m
+  join friends f on f.user_id = m.fid
+    and exists (select 1 from friends b where b.user_id = f.friend_id and b.friend_id = f.user_id)
+  join profiles p on p.id = f.friend_id
+  where f.friend_id <> auth.uid()
+    and not exists (
+      select 1 from friends a
+      where a.user_id = auth.uid() and a.friend_id = f.friend_id
+        and exists (select 1 from friends bb where bb.user_id = f.friend_id and bb.friend_id = auth.uid())
+    )
+  group by p.id, p.username
+  order by mutuals desc, p.username
+  limit 12;
+$$;
+grant execute on function public.friend_suggestions() to authenticated;

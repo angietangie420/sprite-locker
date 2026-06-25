@@ -121,4 +121,26 @@ const SPRITES = [
     {v:"Holofoil", f:"T_Icon_BR_Creature_Sprite_Seven_Holofoil_ui_L.webp", d:"unreleased"} ]}
 ];
 
-window.SPRITE_DATA = { SEASON, IMG_BASE, VARIANT_ORDER, SPRITES };
+// Where / how to get each Sprite (edit freely as Epic reveals more)
+const LOCATIONS = {
+  water:"Starter Sprite — unlocked early. Also found in matches across the Island; bank it at an Extraction Site.",
+  earth:"Starter Sprite — unlocked early. Also found in matches across the Island; bank it at an Extraction Site.",
+  fire:"Starter Sprite — unlocked early. Also found in matches across the Island; bank it at an Extraction Site.",
+  duck:"Found in matches across the Island. Reach an Extraction Site and bank it to keep it.",
+  ghost:"Found in matches across the Island. Reach an Extraction Site and bank it to keep it.",
+  dream:"A rarer find out in matches. Extract and bank it before you're eliminated.",
+  demon:"Found in matches across the Island. Reach an Extraction Site and bank it to keep it.",
+  punk:"A rarer find out in matches. Extract and bank it before you're eliminated.",
+  king:"Found in matches across the Island. Reach an Extraction Site and bank it to keep it.",
+  burntpeanut:"Special mythic Sprite — a very rare drop in matches.",
+  zeropoint:"Ultra-rare mythic — a tiny chance to appear in matches. Extract it immediately!",
+  fishy:"Found near water across the Island. Reach an Extraction Site and bank it.",
+  striker:"Head to the Soccer Pitch and score a goal to unlock it.",
+  aura:"Found in matches across the Island. Reach an Extraction Site and bank it.",
+  boss:"Drops from defeating bosses on the Island — no guaranteed rate.",
+  grim:"Ultra-rare mythic — a tiny chance to appear in matches. Extract it immediately!",
+  air:"Unreleased — not yet obtainable in-game.",
+  seven:"Unreleased — not yet obtainable in-game."
+};
+
+window.SPRITE_DATA = { SEASON, IMG_BASE, VARIANT_ORDER, SPRITES, LOCATIONS };

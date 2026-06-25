@@ -187,6 +187,27 @@
   button:not(.ghost):not(.fchip):hover::after{animation:sheen .6s ease}
   @keyframes sheen{from{left:-130%}to{left:150%}}
   @media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
+
+  /* ---------- sprite detail modal ---------- */
+  .modal{position:fixed;inset:0;z-index:200;background:rgba(6,7,16,.74);backdrop-filter:blur(7px);
+    display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .modalbox{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);
+    border-radius:20px;max-width:540px;width:100%;max-height:88vh;overflow:auto;padding:24px;position:relative;
+    animation:modalin .3s cubic-bezier(.2,1.2,.3,1) both;box-shadow:0 30px 80px #000b}
+  @keyframes modalin{from{opacity:0;transform:translateY(22px) scale(.95)}to{opacity:1;transform:none}}
+  .modalbox.rare{border-top:4px solid var(--rare)} .modalbox.epic{border-top:4px solid var(--epic)}
+  .modalbox.legendary{border-top:4px solid var(--legendary)} .modalbox.mythic{border-top:4px solid var(--mythic)}
+  .modalclose{position:absolute;top:14px;right:14px;background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+    width:34px;height:34px;border-radius:50%;font-size:15px;box-shadow:none;padding:0;display:flex;align-items:center;justify-content:center}
+  .mtop{display:flex;gap:16px;align-items:center}
+  .mtop > img{width:90px;height:90px;object-fit:contain;filter:drop-shadow(0 4px 12px #000b);animation:float 4s ease-in-out infinite}
+  .mtop h2{margin:0 0 6px;font-size:22px}
+  .minfo{margin:15px 0 4px;font-size:14px;line-height:1.5;color:#dde0ff;background:#0a0c18;border:1px solid var(--line);border-radius:12px;padding:13px 15px}
+  .minfo .lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px}
+  .mvtitle{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 9px}
+  .mvariant .vchip{cursor:default}
+  .mvariant .vchip:hover{transform:none;border-color:var(--line)}
 </style>
 </head>
 <body>
@@ -272,18 +293,19 @@
   <div id="tradersView" class="hide">
     <div class="card">
       <div class="statline">
-        <b>Other collectors</b>
+        <b>Add a friend</b>
         <button class="sm" id="inviteBtn">🔗 Invite a friend to trade</button>
       </div>
-      <p class="muted" style="margin:6px 0 0;font-size:13px">Click anyone to compare. Trade matches (they have what you need, you have what they need) are highlighted.</p>
+      <p class="muted" style="margin:6px 0 0;font-size:13px">Search a friend's display name to add them. You'll <b>both</b> need to add each other before you can see each other's collections and trade — nobody else can see yours.</p>
       <div class="ok hide" id="inviteMsg" style="margin-top:10px"></div>
+      <div class="controls" style="margin-top:12px">
+        <input class="search" id="addSearch" placeholder="🔎 Add a friend by username…" style="max-width:none" />
+      </div>
+      <div id="addResults" style="margin-top:6px"></div>
     </div>
-    <div class="controls" style="margin-top:14px">
-      <input class="search" id="friendSearch" placeholder="🔎 Find a collector by name…" />
-      <span class="fchip" id="friendsOnlyBtn" data-on="0">⭐ Friends only</span>
-    </div>
-    <div id="tradersList" style="margin-top:12px"></div>
-    <div class="empty hide" id="noFriendsNote">You haven't added any friends yet — tap "+ Add friend" on a collector to follow them.</div>
+    <div id="pendingWrap" class="hide" style="margin-top:14px"></div>
+    <div id="friendsWrap" style="margin-top:14px"></div>
+    <div id="suggestWrap" class="hide" style="margin-top:14px"></div>
     <div id="compareView" class="hide" style="margin-top:14px"></div>
   </div>
 </div>
@@ -292,10 +314,11 @@
   SpriteLocker · Fan-made tracker · Not affiliated with Epic Games · Images via fortnite.gg · Sprite list maintained in <code>sprites.js</code>
 </footer>
 
+<div id="spriteModal" class="modal hide"><div class="modalbox" id="modalBox"></div></div>
 <canvas id="confetti"></canvas>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=2"></script>
-<script src="sprites.js?v=3"></script>
+<script src="sprites.js?v=4"></script>
 <script>
 /* ============================ APP LOGIC ============================ */
 // SEASON, IMG_BASE, VARIANT_ORDER, SPRITES come from sprites.js
@@ -469,8 +492,40 @@ function spriteCard(sp, editable, otherMap){
     el.querySelectorAll('.vchip').forEach(c => c.onclick = () => toggleOwned(sp, c.dataset.v, c, el));
     el.querySelector('.markall').onclick = () => markAll(sp, el);
   }
+  const headEl = el.querySelector('.head');
+  if (headEl){ headEl.style.cursor = 'pointer'; headEl.title = 'View powers, location & all variants'; headEl.onclick = () => openSpriteModal(sp); }
   return el;
 }
+
+function openSpriteModal(sp){
+  const box = $('modalBox');
+  box.className = 'modalbox ' + sp.rarity;
+  const base = sp.variants[0];
+  const isNew = sp.added ? '<span class="badge new">New</span>' : '';
+  const loc = (window.SPRITE_DATA.LOCATIONS || {})[sp.id] || 'Found in matches across the Island — bank it at an Extraction Site.';
+  const chips = sp.variants.map(x => {
+    const have = !!myOwned[key(sp.id, x.v)];
+    const drop = x.d === 'unreleased' ? '—' : x.d;
+    return `<div class="vchip ${have?'have':''}" title="${x.v}"><img src="${imgUrl(x.f)}" alt="${x.v}"><div class="vlabel">${x.v}</div><div class="vpct">${drop}</div><div class="mark">✓</div></div>`;
+  }).join('');
+  box.innerHTML = `
+    <button class="modalclose" id="modalClose">✕</button>
+    <div class="mtop">
+      <img src="${imgUrl(base.f)}" alt="${sp.name}">
+      <div><h2>${sp.name}</h2>
+        <div class="meta"><span class="badge ${sp.rarity}">${sp.rarity}</span>${isNew}
+          <span class="droppill">${base.d==='unreleased'?'unreleased':base.d+' base drop'}</span></div></div>
+    </div>
+    <div class="minfo"><span class="lbl">⚡ Power</span>${sp.power || 'Effect still being discovered.'}</div>
+    <div class="minfo"><span class="lbl">📍 Where to find it</span>${loc}</div>
+    <div class="mvtitle">All variants &amp; drop rates (${sp.variants.length})</div>
+    <div class="variants mvariant">${chips}</div>`;
+  $('modalClose').onclick = closeModal;
+  $('spriteModal').classList.remove('hide');
+}
+function closeModal(){ $('spriteModal').classList.add('hide'); }
+$('spriteModal').onclick = e => { if (e.target.id === 'spriteModal') closeModal(); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
 function refreshCard(sp, el){
   const ownedHere = sp.variants.filter(x=>myOwned[key(sp.id,x.v)]).length;
@@ -527,57 +582,95 @@ function switchTab(t){
 
 // ---------- TRADERS ----------
 async function loadTraders(){
-  const list = $('tradersList');
-  $('compareView').classList.add('hide'); list.classList.remove('hide');
-  list.innerHTML = '<p class="muted">Loading collectors…</p>';
-  const [{ data:profiles }, { data:coll }, { data:fr }] = await Promise.all([
-    supa.from('profiles').select('id,username'),
-    supa.from('collection').select('user_id,sprite_id,variant,owned'),
-    supa.from('friends').select('friend_id').eq('user_id', me.id)
+  $('compareView').classList.add('hide');
+  const [{ data:out }, { data:inc }] = await Promise.all([
+    supa.from('friends').select('friend_id').eq('user_id', me.id),
+    supa.from('friends').select('user_id').eq('friend_id', me.id)
   ]);
-  myFriends = new Set((fr||[]).map(r=>r.friend_id));
+  const iAdded = new Set((out||[]).map(r=>r.friend_id));
+  const addedMe = new Set((inc||[]).map(r=>r.user_id));
+  const mutual = [...iAdded].filter(id => addedMe.has(id));
+  const pending = [...addedMe].filter(id => !iAdded.has(id));
+  const ids = [...new Set([...mutual, ...pending])];
+  const nameOf = {};
+  if (ids.length){
+    const { data:profs } = await supa.from('profiles').select('id,username').in('id', ids);
+    (profs||[]).forEach(p => nameOf[p.id] = p.username);
+  }
+  const { data:coll } = await supa.from('collection').select('user_id,sprite_id,variant,owned');
   const byUser = {};
   (coll||[]).forEach(r => { if (r.owned){ (byUser[r.user_id] ??= {})[key(r.sprite_id,r.variant)] = true; } });
-  const others = (profiles||[]).filter(p=>p.id!==me.id)
-    .sort((a,b)=> (myFriends.has(b.id)?1:0)-(myFriends.has(a.id)?1:0) || a.username.localeCompare(b.username));
-  list.innerHTML = '';
-  others.forEach(p => {
-    const map = byUser[p.id] || {}; const have = ownedCount(map);
-    const isFriend = myFriends.has(p.id);
+
+  // incoming friend requests
+  const pw = $('pendingWrap');
+  if (pending.length){
+    pw.classList.remove('hide');
+    pw.innerHTML = `<div class="card"><b>Friend requests (${pending.length})</b>` +
+      pending.map(id => `<div class="trader"><div style="min-width:150px"><b>${nameOf[id]||'Player'}</b><div class="muted" style="font-size:12px">added you — add back to compare</div></div><div class="spacer"></div><button class="sm addback" data-id="${id}">↩ Add back</button></div>`).join('') +
+      `</div>`;
+    pw.querySelectorAll('.addback').forEach(b => b.onclick = () => addFriendById(b.dataset.id));
+  } else pw.classList.add('hide');
+
+  // mutual friends
+  const fw = $('friendsWrap'); fw.innerHTML = '';
+  const head = document.createElement('div'); head.className = 'card';
+  head.innerHTML = `<b>Your friends (${mutual.length})</b>` + (mutual.length ? '' :
+    `<div class="empty">No friends yet. Search a display name above to add someone — once you both add each other, they'll appear here to compare and trade.</div>`);
+  fw.appendChild(head);
+  mutual.forEach(id => {
+    const map = byUser[id] || {}; const have = ownedCount(map);
     const row = document.createElement('div'); row.className = 'trader';
-    row.dataset.name = p.username.toLowerCase();
-    row.dataset.friend = isFriend ? '1' : '0';
-    row.innerHTML = `
-      <div style="min-width:130px"><b>${isFriend?'⭐ ':''}${p.username}</b><div class="muted" style="font-size:12px">${have}/${TOTAL}</div></div>
+    row.innerHTML = `<div style="min-width:150px"><b>⭐ ${nameOf[id]||'Player'}</b><div class="muted" style="font-size:12px">${have}/${TOTAL} collected</div></div>
       <div class="pbar"><div class="progress"><div style="width:${have/TOTAL*100}%"></div></div></div>
-      <button class="sm friendbtn ${isFriend?'ghost':''}">${isFriend?'⭐ Friend':'+ Add friend'}</button>
-      <button class="sm cmp">Compare</button>`;
-    row.querySelector('.friendbtn').onclick = e => toggleFriend(p, e.currentTarget);
-    row.querySelector('.cmp').onclick = () => compareWith(p, map);
-    list.appendChild(row);
+      <button class="sm cmp">Compare</button>
+      <button class="sm ghost rm">Remove</button>`;
+    row.querySelector('.cmp').onclick = () => compareWith({ id, username: nameOf[id]||'Player' }, map);
+    row.querySelector('.rm').onclick = () => removeFriend(id);
+    fw.appendChild(row);
   });
-  if (!others.length) list.innerHTML = '<div class="empty">No other collectors yet — invite a friend to sign up!</div>';
+
+  // friends-of-friends suggestions
+  const sw = $('suggestWrap');
+  let sugg = [];
+  try { const r = await supa.rpc('friend_suggestions'); sugg = (r.data||[]).filter(s => !iAdded.has(s.id)); } catch(e){}
+  if (sugg.length){
+    sw.classList.remove('hide');
+    sw.innerHTML = `<div class="card"><b>People you may know</b><p class="muted" style="margin:6px 0 0;font-size:12px">Mutual friends of your friends.</p>` +
+      sugg.map(s => `<div class="trader"><div style="min-width:150px"><b>${s.username}</b><div class="muted" style="font-size:12px">${s.mutuals} mutual friend${s.mutuals>1?'s':''}</div></div><div class="spacer"></div><button class="sm addu" data-id="${s.id}">+ Add</button></div>`).join('') +
+      `</div>`;
+    sw.querySelectorAll('.addu').forEach(b => b.onclick = () => addFriendById(b.dataset.id));
+  } else sw.classList.add('hide');
 }
 
-async function toggleFriend(p, btn){
-  const row = btn.closest('.trader');
-  const nameEl = row && row.querySelector('b');
-  if (myFriends.has(p.id)){
-    myFriends.delete(p.id);
-    btn.textContent = '+ Add friend'; btn.classList.remove('ghost');
-    if (row) row.dataset.friend = '0';
-    if (nameEl) nameEl.textContent = p.username;
-    const { error } = await supa.from('friends').delete().eq('user_id', me.id).eq('friend_id', p.id);
-    if (error) alert('Failed: ' + error.message);
-  } else {
-    myFriends.add(p.id);
-    btn.textContent = '⭐ Friend'; btn.classList.add('ghost');
-    if (row) row.dataset.friend = '1';
-    if (nameEl) nameEl.textContent = '⭐ ' + p.username;
-    const { error } = await supa.from('friends').insert({ user_id: me.id, friend_id: p.id });
-    if (error) alert('Failed: ' + error.message);
-  }
-  applyTraderFilter();
+async function addFriendById(id){
+  const { error } = await supa.from('friends').upsert({ user_id: me.id, friend_id: id }, { onConflict:'user_id,friend_id' });
+  if (error){ alert('Failed: ' + error.message); return; }
+  loadTraders();
+}
+async function removeFriend(id){
+  const { error } = await supa.from('friends').delete().eq('user_id', me.id).eq('friend_id', id);
+  if (error){ alert('Failed: ' + error.message); return; }
+  loadTraders();
+}
+async function searchUsers(q){
+  const [{ data }, { data:out }, { data:inc }] = await Promise.all([
+    supa.from('profiles').select('id,username').ilike('username', '%'+q+'%').limit(8),
+    supa.from('friends').select('friend_id').eq('user_id', me.id),
+    supa.from('friends').select('user_id').eq('friend_id', me.id)
+  ]);
+  const iAdded = new Set((out||[]).map(r=>r.friend_id));
+  const addedMe = new Set((inc||[]).map(r=>r.user_id));
+  const res = (data||[]).filter(p => p.id !== me.id);
+  const box = $('addResults');
+  if (!res.length){ box.innerHTML = '<div class="muted" style="padding:10px 2px;font-size:13px">No players found by that name.</div>'; return; }
+  box.innerHTML = res.map(p => {
+    let label='+ Add', cls='', dis='';
+    if (iAdded.has(p.id) && addedMe.has(p.id)){ label='✓ Friends'; cls='ghost'; dis='disabled'; }
+    else if (iAdded.has(p.id)){ label='Request sent'; cls='ghost'; dis='disabled'; }
+    else if (addedMe.has(p.id)){ label='↩ Add back'; }
+    return `<div class="trader"><div style="min-width:150px"><b>${p.username}</b></div><div class="spacer"></div><button class="sm ${cls} addu" data-id="${p.id}" ${dis}>${label}</button></div>`;
+  }).join('');
+  box.querySelectorAll('.addu').forEach(b => b.onclick = () => addFriendById(b.dataset.id).then(() => searchUsers(q)));
 }
 function compareWith(person, theirMap){
   $('tradersList').classList.add('hide');
@@ -619,26 +712,13 @@ $('inviteBtn').onclick = async () => {
   msg.classList.remove('hide');
 };
 
-// friend search + "friends only" filter
-function applyTraderFilter(){
-  const q = ($('friendSearch').value||'').trim().toLowerCase();
-  const fo = $('friendsOnlyBtn').dataset.on === '1';
-  let shown = 0;
-  document.querySelectorAll('#tradersList .trader').forEach(row => {
-    const okName = !q || (row.dataset.name||'').includes(q);
-    const okFriend = !fo || row.dataset.friend === '1';
-    const vis = okName && okFriend;
-    row.style.display = vis ? '' : 'none';
-    if (vis) shown++;
-  });
-  const note = $('noFriendsNote');
-  if (note) note.classList.toggle('hide', !(fo && shown===0));
-}
-$('friendSearch').oninput = applyTraderFilter;
-$('friendsOnlyBtn').onclick = () => {
-  const b = $('friendsOnlyBtn'); const on = b.dataset.on === '1';
-  b.dataset.on = on ? '0' : '1'; b.classList.toggle('on', !on);
-  applyTraderFilter();
+// add-friend username search
+let _addTimer;
+$('addSearch').oninput = e => {
+  clearTimeout(_addTimer);
+  const q = e.target.value.trim();
+  if (!q){ $('addResults').innerHTML = ''; return; }
+  _addTimer = setTimeout(() => searchUsers(q), 250);
 };
 
 // ---------- interactive flourishes ----------
