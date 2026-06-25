@@ -209,7 +209,8 @@
       <p class="muted" style="margin:6px 0 0;font-size:13px">Click anyone to compare. Trade matches (they have what you need, you have what they need) are highlighted.</p>
       <div class="ok hide" id="inviteMsg" style="margin-top:10px"></div>
     </div>
-    <div id="tradersList" style="margin-top:14px"></div>
+    <input class="search" id="friendSearch" placeholder="🔎 Find a collector by name…" style="max-width:none;margin-top:14px" />
+    <div id="tradersList" style="margin-top:12px"></div>
     <div id="compareView" class="hide" style="margin-top:14px"></div>
   </div>
 </div>
@@ -461,6 +462,7 @@ async function loadTraders(){
     const map = byUser[p.id] || {}; const have = ownedCount(map);
     const isFriend = myFriends.has(p.id);
     const row = document.createElement('div'); row.className = 'trader';
+    row.dataset.name = p.username.toLowerCase();
     row.innerHTML = `
       <div style="min-width:130px"><b>${isFriend?'⭐ ':''}${p.username}</b><div class="muted" style="font-size:12px">${have}/${TOTAL}</div></div>
       <div class="pbar"><div class="progress"><div style="width:${have/TOTAL*100}%"></div></div></div>
@@ -524,6 +526,14 @@ $('inviteBtn').onclick = async () => {
     msg.textContent = 'Copy this invite link and send it to a friend: ' + url;
   }
   msg.classList.remove('hide');
+};
+
+// friend search
+$('friendSearch').oninput = e => {
+  const q = e.target.value.trim().toLowerCase();
+  document.querySelectorAll('#tradersList .trader').forEach(row => {
+    row.style.display = (!q || (row.dataset.name||'').includes(q)) ? '' : 'none';
+  });
 };
 
 // ---------- INIT ----------
