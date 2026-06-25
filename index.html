@@ -6,93 +6,127 @@
 <title>Sprite Locker — Fortnite Sprite Trade Tracker</title>
 <style>
   :root{
-    --bg:#0e1020; --panel:#191c33; --panel2:#222748; --line:#2e3358;
-    --txt:#eef0ff; --muted:#9aa0c8; --accent:#6c5ce7; --accent2:#00d1b2;
-    --have:#00d1b2;
+    --bg:#0c0e1c; --panel:#171a30; --panel2:#1f2440; --line:#2e3358;
+    --txt:#eef0ff; --muted:#9aa0c8; --accent:#7c5cff; --accent2:#00e0c0;
+    --have:#00e0c0;
     --rare:#3aa0ff; --epic:#b15cff; --legendary:#ffb13a; --mythic:#ff5c8a;
   }
   *{box-sizing:border-box}
-  body{margin:0;font-family:'Segoe UI',system-ui,Arial,sans-serif;background:
-    radial-gradient(1200px 600px at 80% -10%,#241a4d 0,transparent 60%),var(--bg);
-    color:var(--txt);min-height:100vh}
-  header{padding:16px 22px;border-bottom:1px solid var(--line);
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:'Segoe UI',system-ui,Arial,sans-serif;color:var(--txt);min-height:100vh;
+    background:
+      radial-gradient(900px 500px at 12% -8%, #3a1d6e55 0, transparent 55%),
+      radial-gradient(900px 500px at 95% -5%, #0b6b6055 0, transparent 55%),
+      var(--bg);}
+  header{position:sticky;top:0;z-index:50;padding:14px 22px;
+    background:rgba(12,14,28,.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);
     display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-  .logo{font-size:22px;font-weight:800;letter-spacing:.5px}
-  .logo span{color:var(--accent2)}
+  .logo{font-size:22px;font-weight:900;letter-spacing:.5px}
+  .logo span{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
   .season{font-size:13px;color:var(--muted)}
   .season b{color:var(--txt)}
   .spacer{flex:1}
   .userbox{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:10px}
-  button{cursor:pointer;border:none;border-radius:9px;padding:9px 14px;
-    font-weight:600;font-size:14px;background:var(--accent);color:#fff;transition:.15s}
-  button:hover{filter:brightness(1.12)}
-  button.ghost{background:var(--panel2);color:var(--txt);border:1px solid var(--line)}
-  button.sm{padding:5px 10px;font-size:12px;border-radius:7px}
-  input{background:#0c0e1c;border:1px solid var(--line);border-radius:9px;
-    padding:10px 12px;color:var(--txt);font-size:14px;width:100%}
+  button{cursor:pointer;border:none;border-radius:10px;padding:9px 14px;font-weight:600;font-size:14px;
+    background:linear-gradient(90deg,var(--accent),#9b7bff);color:#fff;transition:.15s;box-shadow:0 4px 14px #7c5cff33}
+  button:hover{filter:brightness(1.1);transform:translateY(-1px)}
+  button:active{transform:translateY(0)}
+  button.ghost{background:var(--panel2);color:var(--txt);border:1px solid var(--line);box-shadow:none}
+  button.sm{padding:6px 11px;font-size:12px;border-radius:8px}
+  input{background:#0a0c18;border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--txt);font-size:14px;width:100%}
   input:focus{outline:2px solid var(--accent)}
-  .wrap{max-width:1150px;margin:0 auto;padding:22px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px}
+  .wrap{max-width:1180px;margin:0 auto;padding:22px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px}
   .muted{color:var(--muted)}
   .err{color:#ff7b7b;font-size:13px;min-height:18px;margin-top:6px}
   .ok{color:var(--accent2);font-size:13px}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.18)}100%{transform:scale(1)}}
+  @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+  @keyframes celebrate{0%{box-shadow:0 0 0 0 var(--have)}60%{box-shadow:0 0 0 5px transparent}100%{box-shadow:0 0 0 0 transparent}}
+  @keyframes floatup{0%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,-46px) scale(1.4)}}
 
-  .authwrap{max-width:420px;margin:7vh auto}
-  .authwrap h1{margin:0 0 4px;font-size:24px}
+  /* AUTH */
+  .authwrap{max-width:430px;margin:7vh auto;animation:fadeUp .4s ease}
+  .authwrap h1{margin:0 0 4px;font-size:26px}
   .field{margin:12px 0}
   .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
   .tabsmini{display:flex;gap:8px;margin-bottom:14px}
-  .tabsmini button{flex:1;background:var(--panel2);border:1px solid var(--line)}
-  .tabsmini button.active{background:var(--accent)}
+  .tabsmini button{flex:1;background:var(--panel2);border:1px solid var(--line);box-shadow:none}
+  .tabsmini button.active{background:linear-gradient(90deg,var(--accent),#9b7bff)}
 
-  .tabs{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
-  .tabs button{background:var(--panel2);border:1px solid var(--line)}
-  .tabs button.active{background:var(--accent);border-color:var(--accent)}
+  /* TABS */
+  .tabs{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+  .tabs button{background:var(--panel2);border:1px solid var(--line);box-shadow:none}
+  .tabs button.active{background:linear-gradient(90deg,var(--accent),#9b7bff);border-color:transparent}
 
-  .progress{height:12px;background:#0c0e1c;border-radius:20px;overflow:hidden;border:1px solid var(--line)}
-  .progress > div{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0;transition:width .3s}
-  .statline{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px}
-  .pill{font-size:12px;padding:3px 10px;border-radius:20px;background:#0c0e1c;color:var(--muted)}
+  /* PROGRESS */
+  .progress{height:14px;background:#0a0c18;border-radius:20px;overflow:hidden;border:1px solid var(--line)}
+  .progress > div{height:100%;width:0;transition:width .5s cubic-bezier(.4,1.4,.5,1);
+    background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent));background-size:200% 100%;animation:shimmer 3s linear infinite}
+  .statline{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px}
+  .bignum{font-size:26px;font-weight:900}
+  .bignum span{font-size:14px;color:var(--muted);font-weight:600}
+  .pill{font-size:12px;padding:4px 11px;border-radius:20px;background:#0a0c18;color:var(--muted);border:1px solid var(--line)}
+  .raritybar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .rstat{font-size:11px;padding:4px 9px;border-radius:20px;background:#0a0c18;border:1px solid var(--line)}
 
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-top:16px}
-  .sprite{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px;border-top:4px solid var(--line)}
-  .sprite.rare{border-top-color:var(--rare)}
-  .sprite.epic{border-top-color:var(--epic)}
-  .sprite.legendary{border-top-color:var(--legendary)}
-  .sprite.mythic{border-top-color:var(--mythic)}
-  .sprite.done{box-shadow:0 0 0 2px var(--have) inset}
-  .head{display:flex;align-items:center;gap:10px}
-  .head img{width:46px;height:46px;object-fit:contain;filter:drop-shadow(0 2px 4px #0008)}
+  /* CONTROLS */
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:16px 0 4px}
+  .controls .search{flex:1;min-width:180px;max-width:300px}
+  .chipset{display:flex;gap:6px;flex-wrap:wrap}
+  .fchip{font-size:12px;font-weight:600;padding:7px 12px;border-radius:20px;background:var(--panel2);
+    border:1px solid var(--line);color:var(--muted);cursor:pointer;user-select:none;transition:.12s}
+  .fchip:hover{color:var(--txt);border-color:var(--accent)}
+  .fchip.on{color:#fff;background:linear-gradient(90deg,var(--accent),#9b7bff);border-color:transparent}
+  .fchip.on.rare{background:var(--rare)} .fchip.on.epic{background:var(--epic)}
+  .fchip.on.legendary{background:var(--legendary);color:#241a00} .fchip.on.mythic{background:var(--mythic)}
+
+  /* GRID */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(252px,1fr));gap:14px;margin-top:14px}
+  .sprite{position:relative;background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);
+    border-radius:16px;padding:15px;border-top:4px solid var(--line);animation:fadeUp .35s ease both;transition:.18s}
+  .sprite:hover{transform:translateY(-4px);border-color:#3a4170;box-shadow:0 12px 30px #0007}
+  .sprite.rare{border-top-color:var(--rare)} .sprite.epic{border-top-color:var(--epic)}
+  .sprite.legendary{border-top-color:var(--legendary)} .sprite.mythic{border-top-color:var(--mythic)}
+  .sprite.done{box-shadow:0 0 0 2px var(--have) inset, 0 10px 28px #00e0c022}
+  .sprite.celebrate{animation:celebrate .7s ease}
+  .head{display:flex;align-items:center;gap:11px}
+  .head .avatar{width:50px;height:50px;border-radius:12px;background:#0a0c18;display:flex;align-items:center;justify-content:center;border:1px solid var(--line)}
+  .head .avatar img{width:42px;height:42px;object-fit:contain;filter:drop-shadow(0 2px 4px #0009)}
   .head h3{margin:0;font-size:15px;line-height:1.2}
-  .meta{display:flex;gap:6px;align-items:center;margin-top:3px;flex-wrap:wrap}
-  .badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:#0c0e1c;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .meta{display:flex;gap:6px;align-items:center;margin-top:4px;flex-wrap:wrap}
+  .badge{font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px;background:#0a0c18;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
   .badge.rare{color:var(--rare)} .badge.epic{color:var(--epic)}
   .badge.legendary{color:var(--legendary)} .badge.mythic{color:var(--mythic)}
   .badge.new{background:var(--accent2);color:#05231f}
-  .complete{position:absolute;top:10px;right:10px;background:var(--have);color:#05231f;
-    font-size:10px;font-weight:800;padding:3px 8px;border-radius:20px}
-  .power{font-size:11px;color:var(--muted);margin:9px 0 6px;min-height:28px}
-  .variants{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:7px}
-  .vchip{position:relative;background:#0c0e1c;border:1px solid var(--line);border-radius:10px;
-    padding:6px 4px 4px;text-align:center;cursor:pointer;user-select:none;transition:.12s}
-  .vchip:hover{border-color:var(--accent)}
-  .vchip.have{background:rgba(0,209,178,.14);border-color:var(--have)}
+  .complete{position:absolute;top:11px;right:11px;background:var(--have);color:#04231e;font-size:10px;font-weight:900;padding:3px 9px;border-radius:20px}
+  .power{font-size:11px;color:var(--muted);margin:9px 0 8px;min-height:28px;line-height:1.35}
+  .markall{font-size:11px;margin:0 0 9px;background:var(--panel2);border:1px solid var(--line);color:var(--muted);box-shadow:none;padding:5px 10px;width:100%}
+  .markall:hover{color:var(--txt)}
+  .variants{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:7px}
+  .vchip{position:relative;background:#0a0c18;border:1px solid var(--line);border-radius:11px;padding:7px 4px 4px;text-align:center;cursor:pointer;user-select:none;transition:.13s;overflow:hidden}
+  .vchip:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .vchip.have{background:radial-gradient(circle at 50% 30%, #00e0c033, #0a0c18 70%);border-color:var(--have)}
   .vchip.readonly{cursor:default}
-  .vchip.readonly:hover{border-color:var(--line)}
-  .vchip img{width:38px;height:38px;object-fit:contain;display:block;margin:0 auto}
-  .vchip .vlabel{font-size:9px;color:var(--muted);margin-top:2px}
-  .vchip.have .vlabel{color:var(--have);font-weight:700}
-  .vchip .mark{position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;
-    background:#2a2f52;border:1px solid var(--line);font-size:10px;line-height:15px;color:transparent}
-  .vchip.have .mark{background:var(--have);border-color:var(--have);color:#05231f;font-weight:900}
-  .notowned .vchip img{opacity:.45}
-  .vchip.have img{opacity:1}
+  .vchip.readonly:hover{border-color:var(--line);transform:none}
+  .vchip img{width:40px;height:40px;object-fit:contain;display:block;margin:0 auto;transition:.15s;opacity:.4;filter:grayscale(.5)}
+  .vchip.have img{opacity:1;filter:none;animation:pop .35s ease}
+  .vchip .vlabel{font-size:9px;color:var(--muted);margin-top:3px}
+  .vchip.have .vlabel{color:var(--have);font-weight:800}
+  .vchip .vpct{font-size:8.5px;color:#6b719c;margin-top:1px;line-height:1.1}
+  .vchip.have .vpct{color:#3fb9a6}
+  .droppill{font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px;background:#0a0c18;color:var(--accent2);border:1px solid var(--line)}
+  .vchip .mark{position:absolute;top:4px;right:4px;width:17px;height:17px;border-radius:50%;background:#23284a;border:1px solid var(--line);font-size:11px;line-height:16px;color:transparent;transition:.15s}
+  .vchip.have .mark{background:var(--have);border-color:var(--have);color:#04231e;font-weight:900}
+  .floaty{position:absolute;left:50%;top:6px;font-size:13px;font-weight:900;color:var(--have);pointer-events:none;animation:floatup .7s ease forwards}
 
-  .trader{display:flex;align-items:center;gap:14px;background:var(--panel2);border:1px solid var(--line);
-    border-radius:12px;padding:13px 16px;margin-bottom:10px;flex-wrap:wrap}
+  .trader{display:flex;align-items:center;gap:14px;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:13px 16px;margin-bottom:10px;flex-wrap:wrap;transition:.15s;animation:fadeUp .3s ease both}
+  .trader:hover{border-color:var(--accent);transform:translateY(-2px)}
   .trader .pbar{flex:1;min-width:160px}
   .hide{display:none}
-  footer{padding:24px;text-align:center;color:var(--muted);font-size:12px}
+  .empty{text-align:center;color:var(--muted);padding:40px}
+  footer{padding:26px;text-align:center;color:var(--muted);font-size:12px}
 </style>
 </head>
 <body>
@@ -110,7 +144,7 @@
 <!-- AUTH -->
 <div class="wrap authwrap" id="authView">
   <div class="card">
-    <h1>Track. Compare. Trade.</h1>
+    <h1>Track. Compare. <span class="logo"><span>Trade.</span></span></h1>
     <p class="muted">Tick off the Sprite variants you've collected, see what you still need, and browse other collectors to set up trades.</p>
     <div class="tabsmini">
       <button id="tabLogin" class="active">Log in</button>
@@ -120,14 +154,8 @@
       <label>Display name (others see this)</label>
       <input id="username" placeholder="e.g. AngieTangie" maxlength="24" />
     </div>
-    <div class="field">
-      <label>Email</label>
-      <input id="email" type="email" placeholder="you@example.com" />
-    </div>
-    <div class="field">
-      <label>Password</label>
-      <input id="password" type="password" placeholder="at least 6 characters" />
-    </div>
+    <div class="field"><label>Email</label><input id="email" type="email" placeholder="you@example.com" /></div>
+    <div class="field"><label>Password</label><input id="password" type="password" placeholder="at least 6 characters" /></div>
     <button id="authBtn" style="width:100%">Log in</button>
     <div class="err" id="authErr"></div>
     <p class="muted" style="font-size:12px;margin-top:14px" id="configWarn"></p>
@@ -144,13 +172,32 @@
   <div id="mineView">
     <div class="card">
       <div class="statline">
-        <div><b>My Collection</b> <span class="muted" id="mineCount"></span></div>
+        <div class="bignum" id="bignum">0 <span>/ 82 collected</span></div>
         <span class="pill" id="missingPill"></span>
       </div>
       <div class="progress"><div id="mineBar"></div></div>
-      <p class="muted" style="font-size:12px;margin:10px 0 0">Tap any variant to mark it collected. A green ✓ means you have it.</p>
+      <div class="raritybar" id="rarityBar"></div>
     </div>
+
+    <div class="controls">
+      <input class="search" id="search" placeholder="🔎 Search sprites…" />
+      <div class="chipset" id="rarityFilters">
+        <span class="fchip on" data-r="all">All</span>
+        <span class="fchip rare" data-r="rare">Rare</span>
+        <span class="fchip epic" data-r="epic">Epic</span>
+        <span class="fchip legendary" data-r="legendary">Legendary</span>
+        <span class="fchip mythic" data-r="mythic">Mythic</span>
+      </div>
+      <div class="chipset" id="statusFilters">
+        <span class="fchip on" data-s="all">All</span>
+        <span class="fchip" data-s="needed">Still needed</span>
+        <span class="fchip" data-s="done">Completed</span>
+        <span class="fchip" data-s="new">✨ New</span>
+      </div>
+    </div>
+
     <div class="grid" id="mineGrid"></div>
+    <div class="empty hide" id="mineEmpty">No sprites match your filters.</div>
   </div>
 
   <div id="tradersView" class="hide">
@@ -169,32 +216,30 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=2"></script>
-<script src="sprites.js?v=2"></script>
+<script src="sprites.js?v=3"></script>
 <script>
 /* ============================ APP LOGIC ============================ */
-// SEASON, IMG_BASE, VARIANT_ORDER, SPRITES are declared globally by sprites.js
+// SEASON, IMG_BASE, VARIANT_ORDER, SPRITES come from sprites.js
 const cfg = window.SUPA_CONFIG;
 const $ = id => document.getElementById(id);
 const imgUrl = f => IMG_BASE + f;
 const key = (s,v) => `${s}|${v}`;
-
-// total collectible slots = all variants across all sprites
+const RARITY_ORDER = { rare:0, epic:1, legendary:2, mythic:3 };
 const TOTAL = SPRITES.reduce((n,sp)=>n + sp.variants.length, 0);
 
 $('seasonBanner').innerHTML =
-  `<b>${SEASON.chapter} · ${SEASON.season}: ${SEASON.name}</b> — ${SEASON.note} ` +
-  `<span class="muted">(ends ${SEASON.endDate})</span>`;
+  `<b>${SEASON.chapter} · ${SEASON.season}: ${SEASON.name}</b> — ${SEASON.note} <span class="muted">(ends ${SEASON.endDate})</span>`;
 
-// Supabase client
 let supa = null;
 const configured = cfg.SUPABASE_URL && !cfg.SUPABASE_URL.includes('PASTE');
 if (configured) supa = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
 else $('configWarn').textContent = '⚠ Supabase keys not set yet — edit config.js (see README).';
 
-let me = null;          // {id, username}
-let myOwned = {};        // "spriteId|variant" -> true
+let me = null;
+let myOwned = {};
+let fRarity = 'all', fStatus = 'all', fSearch = '';
 
-// ---------- AUTH UI ----------
+// ---------- AUTH ----------
 let mode = 'login';
 $('tabLogin').onclick = () => setMode('login');
 $('tabSignup').onclick = () => setMode('signup');
@@ -215,9 +260,8 @@ $('authBtn').onclick = async () => {
     if (!username){ $('authErr').textContent = 'Pick a display name.'; return; }
     const { data, error } = await supa.auth.signUp({ email, password });
     if (error){ $('authErr').textContent = error.message; return; }
-    const uid = data.user?.id;
-    if (uid){
-      const { error:pErr } = await supa.from('profiles').insert({ id:uid, username });
+    if (data.user?.id){
+      const { error:pErr } = await supa.from('profiles').insert({ id:data.user.id, username });
       if (pErr && !pErr.message.includes('duplicate')){ $('authErr').textContent = pErr.message; return; }
     }
     if (!data.session){ $('authErr').innerHTML = '<span class="ok">Account created! You can log in now.</span>'; setMode('login'); return; }
@@ -253,17 +297,56 @@ async function loadMine(){
   (data||[]).forEach(r => { if (r.owned) myOwned[key(r.sprite_id, r.variant)] = true; });
 }
 
-// ---------- RENDER MY COLLECTION ----------
+// ---------- STATS ----------
 function ownedCount(map){ return Object.keys(map).filter(k=>map[k]).length; }
-
-function renderMine(){
+function updateStats(){
   const have = ownedCount(myOwned);
-  $('mineCount').textContent = `${have} / ${TOTAL} collected`;
+  $('bignum').innerHTML = `${have} <span>/ ${TOTAL} collected</span>`;
   $('mineBar').style.width = (have/TOTAL*100) + '%';
   const missing = TOTAL - have;
   $('missingPill').textContent = missing ? `${missing} still needed` : '🎉 Complete set!';
+  // per-rarity
+  const tally = {};
+  SPRITES.forEach(sp => sp.variants.forEach(x => {
+    const r = sp.rarity; tally[r] ??= {h:0,t:0}; tally[r].t++;
+    if (myOwned[key(sp.id,x.v)]) tally[r].h++;
+  }));
+  $('rarityBar').innerHTML = Object.keys(RARITY_ORDER)
+    .filter(r=>tally[r])
+    .map(r=>`<span class="rstat" style="color:var(--${r})">${r}: ${tally[r].h}/${tally[r].t}</span>`).join('');
+}
+
+// ---------- FILTERS ----------
+function spriteMatches(sp){
+  if (fRarity !== 'all' && sp.rarity !== fRarity) return false;
+  if (fSearch && !sp.name.toLowerCase().includes(fSearch)) return false;
+  const owned = sp.variants.filter(x=>myOwned[key(sp.id,x.v)]).length;
+  if (fStatus === 'needed' && owned === sp.variants.length) return false;
+  if (fStatus === 'done' && owned !== sp.variants.length) return false;
+  if (fStatus === 'new' && !sp.added) return false;
+  return true;
+}
+function wireFilters(){
+  $('search').oninput = e => { fSearch = e.target.value.trim().toLowerCase(); renderGrid(); };
+  $('rarityFilters').querySelectorAll('.fchip').forEach(c => c.onclick = () => {
+    fRarity = c.dataset.r;
+    $('rarityFilters').querySelectorAll('.fchip').forEach(x=>x.classList.toggle('on', x===c));
+    renderGrid();
+  });
+  $('statusFilters').querySelectorAll('.fchip').forEach(c => c.onclick = () => {
+    fStatus = c.dataset.s;
+    $('statusFilters').querySelectorAll('.fchip').forEach(x=>x.classList.toggle('on', x===c));
+    renderGrid();
+  });
+}
+
+// ---------- RENDER ----------
+function renderMine(){ updateStats(); renderGrid(); }
+function renderGrid(){
   const grid = $('mineGrid'); grid.innerHTML = '';
-  SPRITES.forEach(sp => grid.appendChild(spriteCard(sp, true)));
+  const shown = SPRITES.filter(spriteMatches);
+  shown.forEach((sp,i) => { const c = spriteCard(sp, true); c.style.animationDelay = (i*18)+'ms'; grid.appendChild(c); });
+  $('mineEmpty').classList.toggle('hide', shown.length>0);
 }
 
 function spriteCard(sp, editable, otherMap){
@@ -272,44 +355,73 @@ function spriteCard(sp, editable, otherMap){
   const complete = ownedHere === sp.variants.length;
   const el = document.createElement('div');
   el.className = 'sprite ' + sp.rarity + (complete ? ' done' : '');
-
+  el.dataset.sprite = sp.id;
   const isNew = sp.added ? '<span class="badge new">New</span>' : '';
   let chips = '';
   sp.variants.forEach(x => {
-    const have = !!map[key(sp.id, x.v)];
-    chips += `<div class="vchip ${have?'have':'notowned'} ${editable?'':'readonly'}" data-s="${sp.id}" data-v="${x.v}" title="${x.v}">
-      <img src="${imgUrl(x.f)}" alt="${x.v} ${sp.name}" loading="lazy" />
+    const have = !!map[key(sp.id,x.v)];
+    const dropTxt = x.d === 'unreleased' ? 'not yet released' : x.d + ' drop chance';
+    chips += `<div class="vchip ${have?'have':''} ${editable?'':'readonly'}" data-s="${sp.id}" data-v="${x.v}" title="${x.v} ${sp.name} — ${dropTxt}">
+      <img src="${imgUrl(x.f)}" alt="${x.v}" loading="lazy" />
       <div class="vlabel">${x.v}</div>
-      <div class="mark">✓</div>
-    </div>`;
+      <div class="vpct">${x.d === 'unreleased' ? '—' : x.d}</div>
+      <div class="mark">✓</div></div>`;
   });
-
   el.innerHTML = `
     ${complete ? '<div class="complete">✓ Complete</div>' : ''}
     <div class="head">
-      <img src="${imgUrl(sp.variants[0].f)}" alt="${sp.name}" />
-      <div>
-        <h3>${sp.name}</h3>
+      <div class="avatar"><img src="${imgUrl(sp.variants[0].f)}" alt="${sp.name}" /></div>
+      <div><h3>${sp.name}</h3>
         <div class="meta"><span class="badge ${sp.rarity}">${sp.rarity}</span>${isNew}
-          <span class="badge">${ownedHere}/${sp.variants.length}</span></div>
-      </div>
+          <span class="droppill" title="Base Sprite drop chance">${sp.variants[0].d === 'unreleased' ? 'unreleased' : sp.variants[0].d + ' drop'}</span>
+          <span class="badge cnt">${ownedHere}/${sp.variants.length}</span></div></div>
     </div>
     <div class="power">${sp.power||''}</div>
+    ${editable ? `<button class="markall">${complete?'Clear all':'Mark all collected'}</button>` : ''}
     <div class="variants">${chips}</div>`;
-
-  if (editable) el.querySelectorAll('.vchip').forEach(c =>
-    c.onclick = () => toggleOwned(c.dataset.s, c.dataset.v));
+  if (editable){
+    el.querySelectorAll('.vchip').forEach(c => c.onclick = () => toggleOwned(sp, c.dataset.v, c, el));
+    el.querySelector('.markall').onclick = () => markAll(sp, el);
+  }
   return el;
 }
 
-async function toggleOwned(spriteId, variant){
-  const k = key(spriteId, variant);
+function refreshCard(sp, el){
+  const ownedHere = sp.variants.filter(x=>myOwned[key(sp.id,x.v)]).length;
+  const complete = ownedHere === sp.variants.length;
+  el.querySelector('.cnt').textContent = `${ownedHere}/${sp.variants.length}`;
+  const wasDone = el.classList.contains('done');
+  el.classList.toggle('done', complete);
+  let badge = el.querySelector('.complete');
+  if (complete && !badge){ badge = document.createElement('div'); badge.className='complete'; badge.textContent='✓ Complete'; el.appendChild(badge); }
+  if (!complete && badge) badge.remove();
+  const ma = el.querySelector('.markall'); if (ma) ma.textContent = complete ? 'Clear all' : 'Mark all collected';
+  if (complete && !wasDone){ el.classList.remove('celebrate'); void el.offsetWidth; el.classList.add('celebrate'); }
+}
+
+async function toggleOwned(sp, variant, chipEl, cardEl){
+  const k = key(sp.id, variant);
   const next = !myOwned[k];
-  if (next) myOwned[k] = true; else delete myOwned[k];
-  renderMine();
+  if (next){ myOwned[k] = true; chipEl.classList.add('have');
+    const f = document.createElement('div'); f.className='floaty'; f.textContent='+1'; chipEl.appendChild(f); setTimeout(()=>f.remove(),700);
+  } else { delete myOwned[k]; chipEl.classList.remove('have'); }
+  refreshCard(sp, cardEl); updateStats();
   const { error } = await supa.from('collection')
-    .upsert({ user_id:me.id, sprite_id:spriteId, variant, owned:next, updated_at:new Date().toISOString() },
+    .upsert({ user_id:me.id, sprite_id:sp.id, variant, owned:next, updated_at:new Date().toISOString() },
             { onConflict:'user_id,sprite_id,variant' });
+  if (error) alert('Save failed: ' + error.message);
+}
+
+async function markAll(sp, cardEl){
+  const all = sp.variants.every(x=>myOwned[key(sp.id,x.v)]);
+  const next = !all;
+  const rows = sp.variants.map(x => {
+    if (next) myOwned[key(sp.id,x.v)] = true; else delete myOwned[key(sp.id,x.v)];
+    return { user_id:me.id, sprite_id:sp.id, variant:x.v, owned:next, updated_at:new Date().toISOString() };
+  });
+  cardEl.querySelectorAll('.vchip').forEach(c => c.classList.toggle('have', next));
+  refreshCard(sp, cardEl); updateStats();
+  const { error } = await supa.from('collection').upsert(rows, { onConflict:'user_id,sprite_id,variant' });
   if (error) alert('Save failed: ' + error.message);
 }
 
@@ -324,7 +436,7 @@ function switchTab(t){
   if (t==='traders') loadTraders();
 }
 
-// ---------- BROWSE TRADERS ----------
+// ---------- TRADERS ----------
 async function loadTraders(){
   const list = $('tradersList');
   $('compareView').classList.add('hide'); list.classList.remove('hide');
@@ -344,9 +456,8 @@ async function loadTraders(){
     row.querySelector('button').onclick = () => compareWith(p, map);
     list.appendChild(row);
   });
-  if (!list.children.length) list.innerHTML = '<p class="muted">No other collectors yet — invite a friend to sign up!</p>';
+  if (!list.children.length) list.innerHTML = '<div class="empty">No other collectors yet — invite a friend to sign up!</div>';
 }
-
 function compareWith(person, theirMap){
   $('tradersList').classList.add('hide');
   const view = $('compareView'); view.classList.remove('hide');
@@ -362,12 +473,10 @@ function compareWith(person, theirMap){
     <div class="grid" style="grid-template-columns:1fr 1fr;margin-top:8px">
       <div class="card" style="background:var(--panel2)">
         <b style="color:var(--accent2)">They have, you need (${theyHaveINeed.length})</b>
-        <div class="muted" style="font-size:13px;margin-top:6px">${theyHaveINeed.join(', ') || 'Nothing — you have everything they do.'}</div>
-      </div>
+        <div class="muted" style="font-size:13px;margin-top:6px">${theyHaveINeed.join(', ') || 'Nothing — you have everything they do.'}</div></div>
       <div class="card" style="background:var(--panel2)">
         <b style="color:var(--legendary)">You have, they need (${iHaveTheyNeed.length})</b>
-        <div class="muted" style="font-size:13px;margin-top:6px">${iHaveTheyNeed.join(', ') || 'Nothing — they have everything you do.'}</div>
-      </div>
+        <div class="muted" style="font-size:13px;margin-top:6px">${iHaveTheyNeed.join(', ') || 'Nothing — they have everything you do.'}</div></div>
     </div></div>`;
   $('backBtn').onclick = loadTraders;
   const grid = document.createElement('div'); grid.className = 'grid';
@@ -375,7 +484,8 @@ function compareWith(person, theirMap){
   view.appendChild(grid);
 }
 
-// ---------- SESSION RESTORE ----------
+// ---------- INIT ----------
+wireFilters();
 (async function init(){
   if (!supa) return;
   const { data:{ session } } = await supa.auth.getSession();
