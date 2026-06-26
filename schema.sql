@@ -134,3 +134,29 @@ language sql security definer set search_path = public as $$
   limit 12;
 $$;
 grant execute on function public.friend_suggestions() to authenticated;
+
+-- 7) PROFILE EXTRAS + FOR-TRADE + MESSAGING ---------------------------
+alter table public.profiles add column if not exists discord text;
+alter table public.profiles add column if not exists avatar text;
+alter table public.collection add column if not exists for_trade boolean not null default false;
+
+create table if not exists public.messages (
+  id bigint generated always as identity primary key,
+  sender uuid not null references auth.users(id) on delete cascade,
+  recipient uuid not null references auth.users(id) on delete cascade,
+  body text not null,
+  created_at timestamptz default now()
+);
+alter table public.messages enable row level security;
+-- read messages you sent or received
+drop policy if exists "msg read own" on public.messages;
+create policy "msg read own" on public.messages for select using (
+  auth.uid() = sender or auth.uid() = recipient
+);
+-- only send to MUTUAL friends, as yourself
+drop policy if exists "msg send mutual" on public.messages;
+create policy "msg send mutual" on public.messages for insert with check (
+  auth.uid() = sender
+  and exists (select 1 from friends f1 where f1.user_id = auth.uid() and f1.friend_id = recipient)
+  and exists (select 1 from friends f2 where f2.user_id = recipient and f2.friend_id = auth.uid())
+);

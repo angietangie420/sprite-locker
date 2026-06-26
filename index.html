@@ -209,6 +209,26 @@
   .mvtitle{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 9px}
   .mvariant .vchip{cursor:default}
   .mvariant .vchip:hover{transform:none;border-color:var(--line)}
+
+  /* ---------- v5 additions: sort, trade, leaderboard, chat, profile ---------- */
+  .sortsel{background:#0a0c18;border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:9px 10px;font-size:13px;font-weight:600;cursor:pointer}
+  .vchip.trading{box-shadow:0 0 0 2px var(--legendary) inset}
+  .tradeflag{position:absolute;top:3px;left:3px;font-size:11px}
+  .trader.meRow{border-color:var(--accent);background:rgba(124,92,255,.12)}
+  .chatbox{max-width:480px;padding:0;display:flex;flex-direction:column;height:72vh;overflow:hidden}
+  .chathead{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line)}
+  .chathead .modalclose{position:static}
+  .chatlog{flex:1;overflow:auto;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+  .bubble{max-width:78%;padding:9px 12px;border-radius:14px;font-size:14px;line-height:1.4;position:relative;word-wrap:break-word}
+  .bubble.mine{align-self:flex-end;background:linear-gradient(90deg,var(--accent),#9b7bff);color:#fff;border-bottom-right-radius:4px}
+  .bubble.theirs{align-self:flex-start;background:var(--panel2);border:1px solid var(--line);border-bottom-left-radius:4px}
+  .btime{font-size:9px;opacity:.7;margin-top:3px;text-align:right}
+  .chatinput{display:flex;gap:8px;padding:14px 16px;border-top:1px solid var(--line)}
+  .chatinput input{flex:1}
+  .avgrid{display:flex;flex-wrap:wrap;gap:8px}
+  .avopt{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:22px;background:#0a0c18;border:1px solid var(--line);cursor:pointer;transition:.12s}
+  .avopt:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .avopt.sel{border-color:var(--accent2);box-shadow:0 0 0 2px var(--accent2) inset;background:rgba(0,224,192,.12)}
 </style>
 </head>
 <body>
@@ -245,6 +265,7 @@
     <div class="field"><label>Email</label><input id="email" type="email" placeholder="you@example.com" /></div>
     <div class="field"><label>Password</label><input id="password" type="password" placeholder="at least 6 characters" /></div>
     <button id="authBtn" style="width:100%">Log in</button>
+    <div style="text-align:center;margin-top:8px"><a id="forgotLink" style="font-size:12px;color:var(--muted);cursor:pointer;text-decoration:underline">Forgot password?</a></div>
     <div class="err" id="authErr"></div>
     <p class="muted" style="font-size:12px;margin-top:14px" id="configWarn"></p>
   </div>
@@ -272,6 +293,14 @@
 
     <div class="controls">
       <input class="search" id="search" placeholder="🔎 Search sprites…" />
+      <select id="sortSel" class="sortsel">
+        <option value="rarity">Sort: Rarity</option>
+        <option value="name">Sort: Name A–Z</option>
+        <option value="close">Sort: Closest to done</option>
+        <option value="drop">Sort: Highest drop %</option>
+        <option value="need">Sort: Most needed</option>
+      </select>
+      <button class="sm ghost" id="shareBtn">📋 Share progress</button>
       <div class="chipset" id="rarityFilters">
         <span class="fchip on" data-r="all">All</span>
         <span class="fchip rare" data-r="rare">Rare</span>
@@ -283,6 +312,7 @@
         <span class="fchip on" data-s="all">All</span>
         <span class="fchip" data-s="needed">Still needed</span>
         <span class="fchip" data-s="done">Completed</span>
+        <span class="fchip" data-s="trade">🤝 For trade</span>
         <span class="fchip" data-s="new">✨ New</span>
       </div>
     </div>
@@ -305,6 +335,7 @@
       <div id="addResults" style="margin-top:6px"></div>
     </div>
     <div id="pendingWrap" class="hide" style="margin-top:14px"></div>
+    <div id="leaderWrap" class="hide" style="margin-top:14px"></div>
     <div id="friendsWrap" style="margin-top:14px"></div>
     <div id="suggestWrap" class="hide" style="margin-top:14px"></div>
     <div id="compareView" class="hide" style="margin-top:14px"></div>
@@ -316,6 +347,8 @@
 </footer>
 
 <div id="spriteModal" class="modal hide"><div class="modalbox" id="modalBox"></div></div>
+<div id="profileModal" class="modal hide"><div class="modalbox" id="profileBox"></div></div>
+<div id="chatModal" class="modal hide"><div class="modalbox chatbox" id="chatBox"></div></div>
 <canvas id="confetti"></canvas>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=2"></script>
@@ -340,9 +373,11 @@ else $('configWarn').textContent = '⚠ Supabase keys not set yet — edit confi
 
 let me = null;
 let myOwned = {};
+let myTrade = {};
 let myFriends = new Set();
-let fRarity = 'all', fStatus = 'all', fSearch = '';
+let fRarity = 'all', fStatus = 'all', fSearch = '', fSort = 'rarity';
 let wasFullSet = false;
+let chatWith = null, chatTimer = null;
 
 // ---------- AUTH ----------
 let mode = 'login';
@@ -382,24 +417,25 @@ $('logoutBtn').onclick = async () => { await supa.auth.signOut(); location.reloa
 async function boot(){
   const { data:{ user } } = await supa.auth.getUser();
   if (!user) return;
-  let { data:prof } = await supa.from('profiles').select('username').eq('id', user.id).maybeSingle();
+  let { data:prof } = await supa.from('profiles').select('username,discord,avatar').eq('id', user.id).maybeSingle();
   if (!prof){
     const fallback = (user.email||'player').split('@')[0];
     await supa.from('profiles').insert({ id:user.id, username:fallback });
     prof = { username: fallback };
   }
-  me = { id:user.id, username:prof.username };
-  $('whoami').textContent = '👤 ' + me.username;
+  me = { id:user.id, email:user.email, username:prof.username, discord:prof.discord||'', avatar:prof.avatar||'👤' };
+  renderWhoami();
   $('authView').classList.add('hide');
   $('appView').classList.remove('hide');
   $('userBox').classList.remove('hide');
   await loadMine();
   renderMine();
 }
+function renderWhoami(){ $('whoami').textContent = (me.avatar||'👤') + ' ' + me.username; }
 async function loadMine(){
-  myOwned = {};
-  const { data } = await supa.from('collection').select('sprite_id,variant,owned').eq('user_id', me.id);
-  (data||[]).forEach(r => { if (r.owned) myOwned[key(r.sprite_id, r.variant)] = true; });
+  myOwned = {}; myTrade = {};
+  const { data } = await supa.from('collection').select('sprite_id,variant,owned,for_trade').eq('user_id', me.id);
+  (data||[]).forEach(r => { const k = key(r.sprite_id, r.variant); if (r.owned) myOwned[k] = true; if (r.for_trade) myTrade[k] = true; });
 }
 
 // ---------- STATS ----------
@@ -434,7 +470,28 @@ function spriteMatches(sp){
   if (fStatus === 'needed' && owned === sp.variants.length) return false;
   if (fStatus === 'done' && owned !== sp.variants.length) return false;
   if (fStatus === 'new' && !sp.added) return false;
+  if (fStatus === 'trade' && !sp.variants.some(x=>myTrade[key(sp.id,x.v)])) return false;
   return true;
+}
+function sortSprites(list){
+  const owned = sp => sp.variants.filter(x=>myOwned[key(sp.id,x.v)]).length;
+  const dropNum = sp => { const d = sp.variants[0].d; return d === 'unreleased' ? -1 : parseFloat(d); };
+  const arr = [...list];
+  if (fSort === 'name') arr.sort((a,b)=>a.name.localeCompare(b.name));
+  else if (fSort === 'close') arr.sort((a,b)=> (owned(b)/b.variants.length) - (owned(a)/a.variants.length));
+  else if (fSort === 'drop') arr.sort((a,b)=> dropNum(b) - dropNum(a));
+  else if (fSort === 'need') arr.sort((a,b)=> (b.variants.length-owned(b)) - (a.variants.length-owned(a)));
+  else arr.sort((a,b)=> (RARITY_ORDER[a.rarity]-RARITY_ORDER[b.rarity]) || a.name.localeCompare(b.name));
+  return arr;
+}
+function shareProgress(){
+  const have = ownedCount(myOwned);
+  const tally = {};
+  SPRITES.forEach(sp => sp.variants.forEach(x => { tally[sp.rarity] ??= {h:0,t:0}; tally[sp.rarity].t++; if (myOwned[key(sp.id,x.v)]) tally[sp.rarity].h++; }));
+  const lines = Object.keys(RARITY_ORDER).filter(r=>tally[r]).map(r=>`${r}: ${tally[r].h}/${tally[r].t}`).join(' · ');
+  const txt = `🏆 My SpriteLocker progress: ${have}/${TOTAL} sprites collected (${Math.round(have/TOTAL*100)}%)\n${lines}\nTrack & trade yours: ${location.origin + location.pathname}`;
+  navigator.clipboard.writeText(txt).then(()=> alert('Progress copied! Paste it into Discord to flex. 🎉'),
+    ()=> alert(txt));
 }
 function wireFilters(){
   $('search').oninput = e => { fSearch = e.target.value.trim().toLowerCase(); renderGrid(); };
@@ -448,13 +505,15 @@ function wireFilters(){
     $('statusFilters').querySelectorAll('.fchip').forEach(x=>x.classList.toggle('on', x===c));
     renderGrid();
   });
+  $('sortSel').onchange = e => { fSort = e.target.value; renderGrid(); };
+  $('shareBtn').onclick = shareProgress;
 }
 
 // ---------- RENDER ----------
 function renderMine(){ updateStats(); renderGrid(); }
 function renderGrid(){
   const grid = $('mineGrid'); grid.innerHTML = '';
-  const shown = SPRITES.filter(spriteMatches);
+  const shown = sortSprites(SPRITES.filter(spriteMatches));
   shown.forEach((sp,i) => { const c = spriteCard(sp, true); c.style.animationDelay = (i*18)+'ms'; grid.appendChild(c); });
   $('mineEmpty').classList.toggle('hide', shown.length>0);
 }
@@ -505,9 +564,12 @@ function openSpriteModal(sp){
   const isNew = sp.added ? '<span class="badge new">New</span>' : '';
   const loc = (window.SPRITE_DATA.LOCATIONS || {})[sp.id] || 'Found in matches across the Island — bank it at an Extraction Site.';
   const chips = sp.variants.map(x => {
-    const have = !!myOwned[key(sp.id, x.v)];
+    const k = key(sp.id, x.v);
+    const have = !!myOwned[k], trade = !!myTrade[k];
     const drop = x.d === 'unreleased' ? '—' : x.d;
-    return `<div class="vchip ${have?'have':''}" title="${x.v}"><img src="${imgUrl(x.f)}" alt="${x.v}"><div class="vlabel">${x.v}</div><div class="vpct">${drop}</div><div class="mark">✓</div></div>`;
+    return `<div class="vchip ${have?'have':''} ${trade?'trading':''}" data-v="${x.v}" title="${x.v}${have?' — tap to toggle “for trade”':''}">
+      <img src="${imgUrl(x.f)}" alt="${x.v}"><div class="vlabel">${x.v}</div><div class="vpct">${drop}</div>
+      <div class="mark">✓</div>${trade?'<div class="tradeflag">🤝</div>':''}</div>`;
   }).join('');
   box.innerHTML = `
     <button class="modalclose" id="modalClose">✕</button>
@@ -520,9 +582,21 @@ function openSpriteModal(sp){
     <div class="minfo"><span class="lbl">⚡ Power</span>${sp.power || 'Effect still being discovered.'}</div>
     <div class="minfo"><span class="lbl">📍 Where to find it</span>${loc}</div>
     <div class="mvtitle">All variants &amp; drop rates (${sp.variants.length})</div>
-    <div class="variants mvariant">${chips}</div>`;
+    <div class="variants mvariant">${chips}</div>
+    <p class="muted" style="font-size:11px;margin:11px 0 0">Tap a collected variant to mark it 🤝 <b>for trade</b> — your friends will see it's available.</p>`;
   $('modalClose').onclick = closeModal;
+  box.querySelectorAll('.mvariant .vchip').forEach(c => {
+    if (myOwned[key(sp.id, c.dataset.v)]){ c.style.cursor = 'pointer'; c.onclick = () => toggleTrade(sp, c.dataset.v); }
+  });
   $('spriteModal').classList.remove('hide');
+}
+async function toggleTrade(sp, v){
+  const k = key(sp.id, v);
+  if (!myOwned[k]) return;
+  const next = !myTrade[k];
+  if (next) myTrade[k] = true; else delete myTrade[k];
+  await supa.from('collection').upsert({ user_id:me.id, sprite_id:sp.id, variant:v, owned:true, for_trade:next, updated_at:new Date().toISOString() }, { onConflict:'user_id,sprite_id,variant' });
+  openSpriteModal(sp);
 }
 function closeModal(){ $('spriteModal').classList.add('hide'); }
 $('spriteModal').onclick = e => { if (e.target.id === 'spriteModal') closeModal(); };
@@ -594,14 +668,17 @@ async function loadTraders(){
   const mutual = [...iAdded].filter(id => addedMe.has(id));
   const pending = [...addedMe].filter(id => !iAdded.has(id));
   const ids = [...new Set([...mutual, ...pending])];
-  const nameOf = {};
+  const nameOf = {}, profOf = {};
   if (ids.length){
-    const { data:profs } = await supa.from('profiles').select('id,username').in('id', ids);
-    (profs||[]).forEach(p => nameOf[p.id] = p.username);
+    const { data:profs } = await supa.from('profiles').select('id,username,discord,avatar').in('id', ids);
+    (profs||[]).forEach(p => { nameOf[p.id] = p.username; profOf[p.id] = p; });
   }
-  const { data:coll } = await supa.from('collection').select('user_id,sprite_id,variant,owned');
-  const byUser = {};
-  (coll||[]).forEach(r => { if (r.owned){ (byUser[r.user_id] ??= {})[key(r.sprite_id,r.variant)] = true; } });
+  const { data:coll } = await supa.from('collection').select('user_id,sprite_id,variant,owned,for_trade');
+  const byUser = {}, byTrade = {};
+  (coll||[]).forEach(r => {
+    if (r.owned){ (byUser[r.user_id] ??= {})[key(r.sprite_id,r.variant)] = true; }
+    if (r.for_trade){ (byTrade[r.user_id] ??= {})[key(r.sprite_id,r.variant)] = true; }
+  });
 
   // incoming friend requests
   const pw = $('pendingWrap');
@@ -613,6 +690,19 @@ async function loadTraders(){
     pw.querySelectorAll('.addback').forEach(b => b.onclick = () => addFriendById(b.dataset.id));
   } else pw.classList.add('hide');
 
+  // leaderboard (you + mutual friends)
+  const lw = $('leaderWrap');
+  if (mutual.length){
+    const board = [{ name: me.username + ' (you)', have: ownedCount(myOwned), me:true },
+      ...mutual.map(id => ({ name: nameOf[id]||'Player', have: ownedCount(byUser[id]||{}) }))]
+      .sort((a,b)=> b.have - a.have);
+    const medal = i => ['🥇','🥈','🥉'][i] || `#${i+1}`;
+    lw.classList.remove('hide');
+    lw.innerHTML = `<div class="card"><b>🏆 Friends leaderboard</b><div style="margin-top:8px">` +
+      board.map((p,i)=>`<div class="trader ${p.me?'meRow':''}"><div style="width:36px;font-weight:800;font-size:15px">${medal(i)}</div><div style="min-width:130px"><b>${p.name}</b></div><div class="pbar"><div class="progress"><div style="width:${p.have/TOTAL*100}%"></div></div></div><div class="muted" style="font-size:12px;min-width:56px;text-align:right">${p.have}/${TOTAL}</div></div>`).join('') +
+      `</div></div>`;
+  } else lw.classList.add('hide');
+
   // mutual friends
   const fw = $('friendsWrap'); fw.innerHTML = '';
   const head = document.createElement('div'); head.className = 'card';
@@ -621,12 +711,16 @@ async function loadTraders(){
   fw.appendChild(head);
   mutual.forEach(id => {
     const map = byUser[id] || {}; const have = ownedCount(map);
+    const av = (profOf[id] && profOf[id].avatar) || '⭐';
+    const disc = profOf[id] && profOf[id].discord;
     const row = document.createElement('div'); row.className = 'trader';
-    row.innerHTML = `<div style="min-width:150px"><b>⭐ ${nameOf[id]||'Player'}</b><div class="muted" style="font-size:12px">${have}/${TOTAL} collected</div></div>
+    row.innerHTML = `<div style="min-width:160px;display:flex;align-items:center;gap:9px"><span style="font-size:22px">${av}</span><div><b>${nameOf[id]||'Player'}</b><div class="muted" style="font-size:12px">${have}/${TOTAL}${disc?' · 💬 '+disc:''}</div></div></div>
       <div class="pbar"><div class="progress"><div style="width:${have/TOTAL*100}%"></div></div></div>
+      <button class="sm msg">💬 Message</button>
       <button class="sm cmp">Compare</button>
       <button class="sm ghost rm">Remove</button>`;
-    row.querySelector('.cmp').onclick = () => compareWith({ id, username: nameOf[id]||'Player' }, map);
+    row.querySelector('.cmp').onclick = () => compareWith({ id, username: nameOf[id]||'Player' }, map, byTrade[id]||{});
+    row.querySelector('.msg').onclick = () => openChat(id, nameOf[id]||'Player');
     row.querySelector('.rm').onclick = () => removeFriend(id);
     fw.appendChild(row);
   });
@@ -674,18 +768,21 @@ async function searchUsers(q){
   }).join('');
   box.querySelectorAll('.addu').forEach(b => b.onclick = () => addFriendById(b.dataset.id).then(() => searchUsers(q)));
 }
-function compareWith(person, theirMap){
-  ['pendingWrap','friendsWrap','suggestWrap'].forEach(id => $(id) && $(id).classList.add('hide'));
+function compareWith(person, theirMap, theirTrade){
+  theirTrade = theirTrade || {};
+  ['pendingWrap','leaderWrap','friendsWrap','suggestWrap'].forEach(id => $(id) && $(id).classList.add('hide'));
   const view = $('compareView'); view.classList.remove('hide');
   const theyHaveINeed = [], iHaveTheyNeed = [];
   SPRITES.forEach(sp => sp.variants.forEach(x => {
-    const mine = !!myOwned[key(sp.id,x.v)], theirs = !!theirMap[key(sp.id,x.v)];
-    if (theirs && !mine) theyHaveINeed.push(`${sp.name} (${x.v})`);
-    if (mine && !theirs) iHaveTheyNeed.push(`${sp.name} (${x.v})`);
+    const k = key(sp.id,x.v);
+    const mine = !!myOwned[k], theirs = !!theirMap[k];
+    if (theirs && !mine) theyHaveINeed.push(`${sp.name} (${x.v})${theirTrade[k]?' 🤝':''}`);
+    if (mine && !theirs) iHaveTheyNeed.push(`${sp.name} (${x.v})${myTrade[k]?' 🤝':''}`);
   }));
   view.innerHTML = `<div class="card">
-    <button class="ghost sm" id="backBtn">← Back to list</button>
+    <button class="ghost sm" id="backBtn">← Back to friends</button>
     <h2 style="margin:12px 0 2px">${person.username}'s collection</h2>
+    <p class="muted" style="font-size:12px;margin:0 0 4px">🤝 = marked available for trade</p>
     <div class="grid" style="grid-template-columns:1fr 1fr;margin-top:8px">
       <div class="card" style="background:var(--panel2)">
         <b style="color:var(--accent2)">They have, you need (${theyHaveINeed.length})</b>
@@ -749,8 +846,103 @@ function confetti(x, y, big){
   })();
 }
 
+// ---------- MESSAGING ----------
+function escapeHtml(s){ return (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function openChat(friendId, name){
+  chatWith = { id: friendId, name };
+  const box = $('chatBox');
+  box.innerHTML = `
+    <div class="chathead"><b>💬 ${escapeHtml(name)}</b><button class="modalclose" id="chatClose">✕</button></div>
+    <div class="chatlog" id="chatLog"><div class="muted" style="text-align:center;padding:24px">Loading…</div></div>
+    <div class="chatinput"><input id="chatText" placeholder="Message ${escapeHtml(name)}…" maxlength="500" autocomplete="off"><button class="sm" id="chatSend">Send</button></div>`;
+  $('chatModal').classList.remove('hide');
+  $('chatClose').onclick = closeChat;
+  $('chatSend').onclick = sendMessage;
+  $('chatText').onkeydown = e => { if (e.key === 'Enter') sendMessage(); };
+  loadChat(true);
+  clearInterval(chatTimer);
+  chatTimer = setInterval(() => loadChat(false), 4000);
+}
+function closeChat(){ clearInterval(chatTimer); chatTimer = null; chatWith = null; $('chatModal').classList.add('hide'); }
+async function loadChat(toBottom){
+  if (!chatWith) return;
+  const { data } = await supa.from('messages').select('sender,body,created_at')
+    .or(`and(sender.eq.${me.id},recipient.eq.${chatWith.id}),and(sender.eq.${chatWith.id},recipient.eq.${me.id})`)
+    .order('created_at', { ascending: true }).limit(200);
+  const log = $('chatLog'); if (!log) return;
+  if (!data || !data.length){ log.innerHTML = '<div class="muted" style="text-align:center;padding:24px">No messages yet — say hi! 👋</div>'; return; }
+  const nearBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 120;
+  log.innerHTML = data.map(m => {
+    const mine = m.sender === me.id;
+    const t = new Date(m.created_at).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    return `<div class="bubble ${mine?'mine':'theirs'}">${escapeHtml(m.body)}<div class="btime">${t}</div></div>`;
+  }).join('');
+  if (toBottom || nearBottom) log.scrollTop = log.scrollHeight;
+}
+async function sendMessage(){
+  const inp = $('chatText'); if (!inp || !chatWith) return;
+  const body = inp.value.trim(); if (!body) return;
+  inp.value = '';
+  const { error } = await supa.from('messages').insert({ sender: me.id, recipient: chatWith.id, body });
+  if (error){ alert('Could not send: ' + error.message); inp.value = body; return; }
+  loadChat(true);
+}
+$('chatModal').onclick = e => { if (e.target.id === 'chatModal') closeChat(); };
+
+// ---------- PROFILE ----------
+const AVATARS = ['👤','👾','🐉','🔥','💧','🌍','👻','👑','😈','🦆','⭐','🌀','🎮','🦊','🐱','🐸','🍓','🌈','💜','⚡'];
+function openProfileModal(){
+  const box = $('profileBox');
+  box.innerHTML = `
+    <button class="modalclose" id="profClose">✕</button>
+    <h2 style="margin:0 0 14px">Your profile</h2>
+    <div class="field"><label>Avatar</label><div class="avgrid" id="avGrid">${AVATARS.map(a=>`<span class="avopt ${a===me.avatar?'sel':''}" data-a="${a}">${a}</span>`).join('')}</div></div>
+    <div class="field"><label>Display name</label><input id="pName" maxlength="24" value="${escapeHtml(me.username)}"></div>
+    <div class="field"><label>Discord handle (optional — shown to your friends)</label><input id="pDiscord" maxlength="40" placeholder="@yourhandle" value="${escapeHtml(me.discord)}"></div>
+    <div class="err" id="profErr"></div>
+    <button id="profSave" style="width:100%">Save profile</button>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="ghost sm" id="profPwd" style="flex:1">Change password</button>
+      <button class="ghost sm" id="profLogout" style="flex:1">Log out</button>
+    </div>`;
+  $('profileModal').classList.remove('hide');
+  let chosen = me.avatar || '👤';
+  box.querySelectorAll('.avopt').forEach(o => o.onclick = () => { chosen = o.dataset.a; box.querySelectorAll('.avopt').forEach(x=>x.classList.toggle('sel', x===o)); });
+  $('profClose').onclick = () => $('profileModal').classList.add('hide');
+  $('profLogout').onclick = async () => { await supa.auth.signOut(); location.reload(); };
+  $('profPwd').onclick = async () => {
+    const { error } = await supa.auth.resetPasswordForEmail(me.email, { redirectTo: location.origin + location.pathname });
+    alert(error ? ('Error: ' + error.message) : 'Password reset email sent to ' + me.email + '. Open the link to set a new password.');
+  };
+  $('profSave').onclick = async () => {
+    const name = $('pName').value.trim(), discord = $('pDiscord').value.trim();
+    if (!name){ $('profErr').textContent = 'Display name required.'; return; }
+    const { error } = await supa.from('profiles').update({ username:name, discord, avatar:chosen }).eq('id', me.id);
+    if (error){ $('profErr').textContent = error.message.includes('duplicate') ? 'That name is already taken.' : error.message; return; }
+    me.username = name; me.discord = discord; me.avatar = chosen; renderWhoami();
+    $('profileModal').classList.add('hide');
+  };
+}
+$('profileModal').onclick = e => { if (e.target.id === 'profileModal') $('profileModal').classList.add('hide'); };
+
 // ---------- INIT ----------
 wireFilters();
+$('whoami').style.cursor = 'pointer';
+$('whoami').title = 'Edit your profile';
+$('whoami').onclick = openProfileModal;
+$('forgotLink').onclick = async () => {
+  if (!supa) return;
+  const email = $('email').value.trim();
+  if (!email){ $('authErr').textContent = 'Type your email above first, then tap “Forgot password”.'; return; }
+  const { error } = await supa.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+  $('authErr').innerHTML = error ? error.message : '<span class="ok">Reset email sent — check your inbox.</span>';
+};
+if (supa) supa.auth.onAuthStateChange((event) => {
+  if (event === 'PASSWORD_RECOVERY'){
+    const np = prompt('Enter a new password (at least 6 characters):');
+    if (np) supa.auth.updateUser({ password: np }).then(({error}) => alert(error ? error.message : 'Password updated! ✅'));
+  }
+});
 (async function init(){
   if (!supa) return;
   const { data:{ session } } = await supa.auth.getSession();
