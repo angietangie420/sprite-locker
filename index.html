@@ -584,6 +584,7 @@ function switchTab(t){
 // ---------- TRADERS ----------
 async function loadTraders(){
   $('compareView').classList.add('hide');
+  $('friendsWrap').classList.remove('hide');
   const [{ data:out }, { data:inc }] = await Promise.all([
     supa.from('friends').select('friend_id').eq('user_id', me.id),
     supa.from('friends').select('user_id').eq('friend_id', me.id)
@@ -674,7 +675,7 @@ async function searchUsers(q){
   box.querySelectorAll('.addu').forEach(b => b.onclick = () => addFriendById(b.dataset.id).then(() => searchUsers(q)));
 }
 function compareWith(person, theirMap){
-  $('tradersList').classList.add('hide');
+  ['pendingWrap','friendsWrap','suggestWrap'].forEach(id => $(id) && $(id).classList.add('hide'));
   const view = $('compareView'); view.classList.remove('hide');
   const theyHaveINeed = [], iHaveTheyNeed = [];
   SPRITES.forEach(sp => sp.variants.forEach(x => {
